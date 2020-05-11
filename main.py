@@ -139,7 +139,7 @@ async def on_raw_reaction_add(payload):
 						most sites that can host images, put the main image into the og:image property, so we get the links to the images from there
 						<meta property="og:image" content="link" />
 						"""
-						if 'deviantart.com' in url[0][0] or 'www.instagram.com' in url[0][0] or 'www.tumblr.com' in url[0][0] or 'pixiv.net' in url[0][0]:
+						if 'deviantart.com' in url[0][0] or 'www.instagram.com' in url[0][0] or 'tumblr.com' in url[0][0] or 'pixiv.net' in url[0][0]:
 							for tag in BeautifulSoup(processed_url, 'html.parser').findAll('meta'):
 								if tag.get('property') == 'og:image':
 									await buildEmbed(msg, tag.get('content'))
