@@ -222,7 +222,7 @@ async def presence(ctx, *, b: str):
 		await bot.change_presence(activity=discord.Game(name=b))
 
 """
-Change default presence
+Change default presence.
 """
 @bot.command(brief='Sets the default presence.')
 async def prefix(ctx, *, b: str):
