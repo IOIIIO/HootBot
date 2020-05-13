@@ -224,7 +224,7 @@ async def presence(ctx, *, b: str):
 """
 Change default presence.
 """
-@bot.command(brief='Sets the default presence.')
+@bot.command(brief='Change the bot prefix.')
 async def prefix(ctx, *, b: str):
 	if is_owner(ctx):
 		cfg["config"].update({'prefix' : b})
@@ -235,7 +235,7 @@ async def prefix(ctx, *, b: str):
 """
 Toggle whether cache should be used.
 """
-@bot.group(brief='Sets the default presence.')
+@bot.group(brief='Toggle whether cache should be used.')
 async def cache(ctx):
 	if ctx.invoked_subcommand is None:
 		if is_owner(ctx):
