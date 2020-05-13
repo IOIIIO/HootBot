@@ -206,6 +206,18 @@ Change default presence
 """
 @bot.command(brief='Sets the default presence')
 async def presence(ctx, *, b: str):
+	if is_owner(ctx):
+		cfg["config"] = {
+			'presence' : b
+		}
+		json.dump(cfg, open('bot.json', 'w'), indent=4)
+		await bot.change_presence(activity=discord.Game(name=b))
+
+"""
+Update the bot and restart
+"""
+@bot.command(brief='Updates the bot to the latest commit and restarts.')
+async def presence(ctx, *, b: str):
 	if is_owner:
 		cfg["config"] = {
 			'presence' : b
