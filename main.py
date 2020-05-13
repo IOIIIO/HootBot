@@ -271,23 +271,44 @@ async def secret(ctx, *, b: str):
 """
 Update the bot and restarts
 """
-@bot.command(brief='Updates the bot to the latest commit and restarts.')
+@bot.group(brief='Updates the bot to the latest commit and restarts if necessary.')
 async def update(ctx):
-	if is_owner(ctx):
-		e = os.popen('git pull').read()
-		if "Already up to date." in e:
-			r = "Not restarting."
-			c = 0xff0000
-		else:
-			r = "Restarting!"
-			c = 0x00ff00
-		embed=discord.Embed(title="HootBot Updater", color=c)
-		embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
-		await ctx.send(embed=embed)
-		if c == 0x00ff00:
-			await bot.logout()
-			os.execl(sys.executable, sys.executable, * sys.argv)
+	if ctx.invoked_subcommand is None:
+		if is_owner(ctx):
+			e = os.popen('git pull').read()
+			if "Already up to date." in e:
+				r = "Not restarting."
+				c = 0xff0000
+			else:
+				r = "Restarting!"
+				c = 0x00ff00
+			embed=discord.Embed(title="HootBot Updater", color=c)
+			embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
+			await ctx.send(embed=embed)
+			if c == 0x00ff00:
+				await bot.logout()
+				os.execl(sys.executable, sys.executable, * sys.argv)
 
+@update.group(brief='Updates the bot to the latest commit, updates requirements and restarts.')
+async def pip(ctx):
+	if is_owner(ctx):
+			e = os.popen('git pull').read()
+			if "Already up to date." in e:
+				r = "Not restarting."
+				c = 0xff0000
+				p = ""
+			else:
+				p = os.popen('pip3 install -r requirements.txt').read()
+				r = "Restarting!"
+				c = 0x00ff00
+			embed=discord.Embed(title="HootBot Updater", color=c)
+			embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
+			if p != "":
+				embed.add_field(name="pip return:", value="```e\n{}```".format(p), inline=False)
+			await ctx.send(embed=embed)
+			if c == 0x00ff00:
+				await bot.logout()
+				os.execl(sys.executable, sys.executable, * sys.argv)
 
 """
 Deletes the given message from archive cache.
