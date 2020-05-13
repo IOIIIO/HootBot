@@ -306,7 +306,7 @@ async def pip(ctx):
 		embed=discord.Embed(title="HootBot Updater", color=c)
 		embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
 		if p != "":
-			embed.add_field(name="pip return:", value="{}`".format(p), inline=False)
+			embed.add_field(name="pip return:", value="{}".format(p), inline=False)
 		await ctx.send(embed=embed)
 		if c == 0x00ff00:
 			await bot.logout()
