@@ -221,10 +221,8 @@ Update the bot and restart
 async def update(ctx):
 	if is_owner(ctx):
 		os.system("git pull")
-		#await bot.logout()
-		ex = sys.executable + " " + __file__
-		print(ex)
-		#os.system(ex)
+		await bot.logout()
+		os.execv(__file__, sys.argv)
 
 
 """
