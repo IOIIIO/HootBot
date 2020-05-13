@@ -38,7 +38,7 @@ def start_config():
 		print("")
 		print("prefix:")
 		id3 = input("> ")
-		temp = {"token" : id, "owner" : id2, "prefix" : id3}
+		temp = {"token" : id, "owner" : id2, "config": {"prefix" : id3}}
 		json.dump(temp, open('bot.json', 'w'), indent=4)
 		temp = 0
 		id2 = 0
@@ -89,7 +89,7 @@ async def buildEmbed(msg, url, tweet = ''):
 
 	await bot.get_channel(cfg[str(msg.guild.id)]['bot']['archive_channel']).send(embed=embed)
 
-bot = commands.Bot(command_prefix=cfg["prefix"])
+bot = commands.Bot(command_prefix=cfg["config"]["prefix"])
 
 @bot.event
 async def on_ready():
@@ -210,6 +210,16 @@ Change default presence
 """
 @bot.command(brief='Sets the default presence')
 async def presence(ctx, *, b: str):
+	if is_owner(ctx):
+		cfg["config"].update({'presence' : b})
+		json.dump(cfg, open('bot.json', 'w'), indent=4)
+		await bot.change_presence(activity=discord.Game(name=b))
+
+"""
+Change default presence
+"""
+@bot.command(brief='Sets the default presence')
+async def no(ctx, *, b: str):
 	if is_owner(ctx):
 		cfg["config"].update({'presence' : b})
 		json.dump(cfg, open('bot.json', 'w'), indent=4)
