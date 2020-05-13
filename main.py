@@ -49,8 +49,14 @@ try:
 	from discord.ext import commands
 	from bs4 import BeautifulSoup
 	import requests
+	from imgurpython import ImgurClient
 except:
 	sr()
+	import discord
+	from discord.ext import commands
+	from bs4 import BeautifulSoup
+	import requests
+	from imgurpython import ImgurClient
 
 if os.path.isfile("bot.json"):
 	cfg = json.load(open('bot.json'))
@@ -76,8 +82,11 @@ def get_id(url):
 tweet is only used when we want to archive the text from a tweet
 """
 async def buildEmbed(msg, url, tweet = ''):
+	if cfg["config"]["cache"] == True:
+		client = ImgurClient(cfg["config"]["imgur_usr"], cfg["config"]["imgur_scr"])
+		url = client.upload_from_url(url, anon=True)["link"]
+	
 	embed = discord.Embed()
-
 	if len(tweet):
 		embed.add_field(name='Tweet content', value=tweet, inline=False)
 	elif isinstance(msg, discord.Message) and len(msg.content):
@@ -220,6 +229,42 @@ async def prefix(ctx, *, b: str):
 		json.dump(cfg, open('bot.json', 'w'), indent=4)
 		bot.command_prefix = b
 		await ctx.send("Succesfully changed prefix to: \"{}\"".format(b))
+
+"""
+Toggle whether cache should be used.
+"""
+@bot.group(brief='Sets the default presence')
+async def cache(ctx):
+	if ctx.invoked_subcommand is None:
+		if is_owner(ctx):
+			if "cache" in cfg["config"]:
+				if cfg["config"]["cache"] == True:
+					cfg["config"].update({'cache' : False})
+					b = "disabled"
+				else:
+					cfg["config"].update({'cache' : True})
+					b = "enabled"
+			else:
+				cfg["config"].update({'cache' : True})
+				b = "enabled"
+			json.dump(cfg, open('bot.json', 'w'), indent=4)
+			await ctx.send("Succesfully changed cache state to: \"{}\"".format(b))
+
+@cache.group(brief='Set imgur UserID')
+async def user(ctx, *, b: str):
+	if is_owner(ctx):
+		cfg["config"].update({'imgur_usr' : b})
+		json.dump(cfg, open('bot.json', 'w'), indent=4)
+		await ctx.send("Succesfully updated key.")
+	b = 0
+
+@cache.group(brief='Set imgur Secret')
+async def secret(ctx, *, b: str):
+	if is_owner(ctx):
+		cfg["config"].update({'imgur_scr' : b})
+		json.dump(cfg, open('bot.json', 'w'), indent=4)
+		await ctx.send("Succesfully updated key.")
+	b = 0
 
 """
 Update the bot and restarts
