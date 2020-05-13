@@ -52,11 +52,6 @@ try:
 	from imgurpython import ImgurClient
 except:
 	sr()
-	import discord
-	from discord.ext import commands
-	from bs4 import BeautifulSoup
-	import requests
-	from imgurpython import ImgurClient
 
 if os.path.isfile("bot.json"):
 	cfg = json.load(open('bot.json'))
@@ -82,9 +77,10 @@ def get_id(url):
 tweet is only used when we want to archive the text from a tweet
 """
 async def buildEmbed(msg, url, tweet = ''):
-	if cfg["config"]["cache"] == True:
-		client = ImgurClient(cfg["config"]["imgur_usr"], cfg["config"]["imgur_scr"])
-		url = client.upload_from_url(url, anon=True)["link"]
+	if url != "":
+		if cfg["config"]["cache"] == True:
+			client = ImgurClient(cfg["config"]["imgur_usr"], cfg["config"]["imgur_scr"])
+			url = client.upload_from_url(url, anon=True)["link"]
 	
 	embed = discord.Embed()
 	if len(tweet):
