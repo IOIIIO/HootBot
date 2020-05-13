@@ -224,7 +224,7 @@ async def presence(ctx, *, b: str):
 """
 Change default presence
 """
-@bot.command(brief='Sets the default presence')
+@bot.command(brief='Sets the default presence.')
 async def prefix(ctx, *, b: str):
 	if is_owner(ctx):
 		cfg["config"].update({'prefix' : b})
