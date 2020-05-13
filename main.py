@@ -298,9 +298,11 @@ async def pip(ctx):
 			c = 0xff0000
 			p = ""
 		else:
-			p = os.popen('pip3 install -r requirements.txt').read()
+			os.popen('pip3 install -r requirements.txt > output.txt')
+			log = os.popen('curl -F "file=@output.txt" https://file.io').read()["link"]
 			r = "Restarting!"
 			c = 0x00ff00
+			p = "[Click here for log!]({})".format(log)
 		embed=discord.Embed(title="HootBot Updater", color=c)
 		embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
 		if p != "":
