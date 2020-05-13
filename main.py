@@ -101,10 +101,6 @@ I use on_raw_reaction_add instead of on_reaction_add, because on_reaction_add do
 async def on_raw_reaction_add(payload):
 	msg = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
-	if str(msg.guild.id) not in cfg:
-		await bot.get_channel(payload.channel_id).send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
-		return
-
 	if str(payload.channel_id)+str(payload.message_id) in cfg[str(msg.guild.id)]['ignore_list']:
 		return
 
