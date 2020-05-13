@@ -215,7 +215,7 @@ async def presence(ctx, *, b: str):
 		await bot.change_presence(activity=discord.Game(name=b))
 
 """
-Update the bot and restart
+Update the bot and restarts
 """
 @bot.command(brief='Updates the bot to the latest commit and restarts.')
 async def update(ctx):
