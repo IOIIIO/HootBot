@@ -177,7 +177,7 @@ async def on_raw_reaction_add(payload):
 				json.dump(cfg, open('bot.json', 'w'), indent=4)
 
 def is_owner(ctx):
-	if ctx.message.author.id == cfg["owner"]:
+	if str(ctx.message.author.id) == cfg["owner"]:
 		return True
 	else:
 		return False
