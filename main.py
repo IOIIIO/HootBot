@@ -220,7 +220,8 @@ Update the bot and restart
 @bot.command(brief='Updates the bot to the latest commit and restarts.')
 async def update(ctx):
 	if is_owner(ctx):
-		os.system("git pull")
+		e = os.popen('git pull').read()
+		await ctx.send("```e\n{}```".format(e))
 		await bot.logout()
 		os.execl(sys.executable, sys.executable, * sys.argv)
 
