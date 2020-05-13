@@ -214,7 +214,7 @@ async def setup(ctx, archive_channel: discord.TextChannel, archive_emote: discor
 """
 Change default presence
 """
-@bot.command(brief='Sets the default presence')
+@bot.command(brief='Sets the default presence.')
 async def presence(ctx, *, b: str):
 	if is_owner(ctx):
 		cfg["config"].update({'presence' : b})
