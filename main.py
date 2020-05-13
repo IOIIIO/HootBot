@@ -224,6 +224,7 @@ async def prefix(ctx, *, b: str):
 		cfg["config"].update({'prefix' : b})
 		json.dump(cfg, open('bot.json', 'w'), indent=4)
 		bot.command_prefix = b
+		await ctx.send("Succesfully changed prefix to: \"{}\"".format(b))
 
 """
 Update the bot and restarts
