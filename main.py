@@ -222,9 +222,15 @@ async def update(ctx):
 	if is_owner(ctx):
 		e = os.popen('git pull').read()
 		if "Already up to date." in e:
-			await ctx.send("```e\n{}\nNot restarting bot.```".format(e))
+			r = "Not restarting."
+			c = 0xff0000
 		else:
-			await ctx.send("```e\n{}\nRestarting!```".format(e))
+			r = "Restarting!"
+			c = 0x00ff00
+		embed=discord.Embed(title="HootBot Updater", color=c)
+		embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
+		await ctx.send(embed=embed)
+		if c == 0x00ff00:
 			await bot.logout()
 			os.execl(sys.executable, sys.executable, * sys.argv)
 
