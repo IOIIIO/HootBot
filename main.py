@@ -221,9 +221,12 @@ Update the bot and restarts
 async def update(ctx):
 	if is_owner(ctx):
 		e = os.popen('git pull').read()
-		await ctx.send("```e\n{}```".format(e))
-		await bot.logout()
-		os.execl(sys.executable, sys.executable, * sys.argv)
+		if "Already up to date." in e:
+			await ctx.send("```e\n{}\nNot restarting bot.```".format(e))
+		else:
+			await ctx.send("```e\n{}\nRestarting!```".format(e))
+			await bot.logout()
+			os.execl(sys.executable, sys.executable, * sys.argv)
 
 
 """
