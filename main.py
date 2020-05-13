@@ -235,7 +235,7 @@ async def prefix(ctx, *, b: str):
 """
 Toggle whether cache should be used.
 """
-@bot.group(brief='Sets the default presence')
+@bot.group(brief='Sets the default presence.')
 async def cache(ctx):
 	if ctx.invoked_subcommand is None:
 		if is_owner(ctx):
@@ -252,7 +252,7 @@ async def cache(ctx):
 			json.dump(cfg, open('bot.json', 'w'), indent=4)
 			await ctx.send("Succesfully changed cache state to: \"{}\"".format(b))
 
-@cache.group(brief='Set imgur UserID')
+@cache.group(brief='Set imgur UserID.')
 async def user(ctx, *, b: str):
 	if is_owner(ctx):
 		cfg["config"].update({'imgur_usr' : b})
@@ -260,7 +260,7 @@ async def user(ctx, *, b: str):
 		await ctx.send("Succesfully updated key.")
 	b = 0
 
-@cache.group(brief='Set imgur Secret')
+@cache.group(brief='Set imgur Secret.')
 async def secret(ctx, *, b: str):
 	if is_owner(ctx):
 		cfg["config"].update({'imgur_scr' : b})
