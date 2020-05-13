@@ -222,7 +222,7 @@ async def update(ctx):
 	if is_owner(ctx):
 		os.system("git pull")
 		await bot.logout()
-		os.execv(sys.executable + " " + __file__, sys.argv)
+		os.execl(sys.executable, sys.executable, * sys.argv)
 
 
 """
