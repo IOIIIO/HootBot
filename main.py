@@ -299,8 +299,7 @@ async def pip(ctx):
 			p = ""
 		else:
 			os.popen('pip3 install -r requirements.txt > output.txt')
-			log = os.popen('curl -F "file=@output.txt" https://file.io').read()
-			log = log["link"]
+			log = json.loads(os.popen('curl -F "file=@output.txt" https://file.io').read())["link"]
 			r = "Restarting!"
 			c = 0x00ff00
 			p = "[Click here for log!]({})".format(log)
