@@ -212,7 +212,7 @@ async def setup(ctx, archive_channel: discord.TextChannel, archive_emote: discor
 	json.dump(cfg, open('bot.json', 'w'), indent=4)
 
 """
-Change default presence
+Change default presence.
 """
 @bot.command(brief='Sets the default presence.')
 async def presence(ctx, *, b: str):
