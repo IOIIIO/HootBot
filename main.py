@@ -79,8 +79,14 @@ tweet is only used when we want to archive the text from a tweet
 async def buildEmbed(msg, url, tweet = ''):
 	if url != "":
 		if cfg["config"]["cache"] == True:
-			client = ImgurClient(cfg["config"]["imgur_usr"], cfg["config"]["imgur_scr"])
-			url = client.upload_from_url(url, anon=True)["link"]
+			try:
+				url2 = url
+				if not any(ext in url for ext in ['.mp4', ".mov", ".webm", ".webp"]):
+					client = ImgurClient(cfg["config"]["imgur_usr"], cfg["config"]["imgur_scr"])
+					url = client.upload_from_url(url, anon=True)["link"]
+			except:
+				url = url2
+				pass
 	
 	embed = discord.Embed()
 	if len(tweet):
