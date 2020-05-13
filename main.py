@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import sys
 from urllib.parse import parse_qs, urlparse
 
 def sr():
@@ -205,7 +206,7 @@ async def setup(ctx, archive_channel: discord.TextChannel, archive_emote: discor
 Change default presence
 """
 @bot.command(brief='Sets the default presence')
-async def presenceeaea(ctx, *, b: str):
+async def presence(ctx, *, b: str):
 	if is_owner(ctx):
 		cfg["config"] = {
 			'presence' : b
@@ -217,13 +218,13 @@ async def presenceeaea(ctx, *, b: str):
 Update the bot and restart
 """
 @bot.command(brief='Updates the bot to the latest commit and restarts.')
-async def presence(ctx, *, b: str):
+async def update(ctx):
 	if is_owner(ctx):
-		cfg["config"] = {
-			'presence' : b
-		}
-		json.dump(cfg, open('bot.json', 'w'), indent=4)
-		await bot.change_presence(activity=discord.Game(name=b))
+		os.system("git pull")
+		#await bot.logout()
+		ex = sys.executable + " " + __file__
+		print(ex)
+		#os.system(ex)
 
 
 """
