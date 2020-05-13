@@ -218,7 +218,7 @@ Update the bot and restart
 """
 @bot.command(brief='Updates the bot to the latest commit and restarts.')
 async def presence(ctx, *, b: str):
-	if is_owner:
+	if is_owner(ctx):
 		cfg["config"] = {
 			'presence' : b
 		}
