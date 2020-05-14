@@ -87,7 +87,7 @@ async def buildEmbed(msg, url, tweet = ''):
 			except:
 				url = url2
 				pass
-	
+			
 	embed = discord.Embed()
 	if len(tweet):
 		embed.add_field(name='Tweet content', value=tweet, inline=False)
@@ -138,7 +138,6 @@ async def on_raw_reaction_add(payload):
 				else:
 					if url:
 						processed_url = requests.get(url[0][0].replace('mobile.', '')).text
-						msg.content = msg.content.replace(url[0][0], '').replace('<>', '').strip()
 						"""
 						most sites that can host images, put the main image into the og:image property, so we get the links to the images from there
 						<meta property="og:image" content="link" />
