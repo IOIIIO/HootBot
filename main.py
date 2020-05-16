@@ -136,6 +136,8 @@ async def on_raw_reaction_add(payload):
 					exceptions.remove(str(payload.channel_id)+str(payload.message_id))
 					json.dump(cfg, open('bot.json', 'w'), indent=4)
 				else:
+					cfg[str(msg.guild.id)]['ignore_list'].append(str(payload.channel_id)+str(payload.message_id))
+					json.dump(cfg, open('bot.json', 'w'), indent=4)
 					if url:
 						processed_url = requests.get(url[0][0].replace('mobile.', '')).text
 						"""
@@ -181,9 +183,6 @@ async def on_raw_reaction_add(payload):
 							await buildEmbed(msg, msg.attachments[0].url)
 						else:
 							await buildEmbed(msg, '')
-
-				cfg[str(msg.guild.id)]['ignore_list'].append(str(payload.channel_id)+str(payload.message_id))
-				json.dump(cfg, open('bot.json', 'w'), indent=4)
 
 def is_owner(ctx):
 	if str(ctx.message.author.id) == cfg["owner"]:
