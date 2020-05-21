@@ -138,51 +138,63 @@ async def on_raw_reaction_add(payload):
 				else:
 					cfg[str(msg.guild.id)]['ignore_list'].append(str(payload.channel_id)+str(payload.message_id))
 					json.dump(cfg, open('bot.json', 'w'), indent=4)
+					
 					if url:
-						processed_url = requests.get(url[0][0].replace('mobile.', '')).text
-						"""
-						most sites that can host images, put the main image into the og:image property, so we get the links to the images from there
-						<meta property="og:image" content="link" />
-						"""
-						if 'deviantart.com' in url[0][0] or 'www.instagram.com' in url[0][0] or 'tumblr.com' in url[0][0] or 'pixiv.net' in url[0][0]:
-							await buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
-						elif 'twitter.com' in url[0][0]:
-							"""
-							either archive the image in the tweet if there is one or archive the text
-							"""
-							for tag in BeautifulSoup(processed_url, 'html.parser').findAll('meta'):
-								if tag.get('property') == 'og:image' and 'profile_images' not in tag.get('content'):
-									await buildEmbed(msg, tag.get('content'))
-									break
-								elif tag.get('property') == 'og:description':
-									await buildEmbed(msg, '', tag.get('content'))
-									break
-						elif 'youtube.com' in url[0][0] or 'youtu.be' in url[0][0]:
-							await buildEmbed(msg, 'https://img.youtube.com/vi/{}/0.jpg'.format(get_id(url[0][0])))
-						elif 'dcinside.com' in url[0][0]:
+						if msg.attachments:
 							await buildEmbed(msg, msg.attachments[0].url)
-						elif 'imgur' in url[0][0]:
-							if 'i.imgur' not in url[0][0]:
-								await buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content').replace('?fb', ''))
-							else:
-								await buildEmbed(msg, url[0][0])
-						elif 'https://tenor.com' in url[0][0]:
-							for img in BeautifulSoup(processed_url, 'html.parser').findAll('img', attrs={'src': True}):
-								if 'media1.tenor.com' in img.get('src'):
-									await buildEmbed(msg, img.get('src'))
 						else:
-							if msg.embeds and msg.embeds[0].url != url[0][0]:
-								await buildEmbed(msg, msg.embeds[0].url)
-							else:
-								if msg.attachments:
-									await buildEmbed(msg, msg.attachments[0].url)
+							processed_url = requests.get(url[0][0].replace('mobile.', '')).text
+							"""
+							most sites that can host images, put the main image into the og:image property, so we get the links to the images from there
+							<meta property="og:image" content="link" />
+							"""
+							if 'deviantart.com' in url[0][0] or 'www.instagram.com' in url[0][0] or 'tumblr.com' in url[0][0] or 'pixiv.net' in url[0][0]:
+								print(msg)
+								print(BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}))
+								await buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
+							elif 'twitter.com' in url[0][0]:
+								"""
+								either archive the image in the tweet if there is one or archive the text
+								"""
+								for tag in BeautifulSoup(processed_url, 'html.parser').findAll('meta'):
+									if tag.get('property') == 'og:image' and 'profile_images' not in tag.get('content'):
+										await buildEmbed(msg, tag.get('content'))
+										break
+									elif tag.get('property') == 'og:description':
+										await buildEmbed(msg, '', tag.get('content'))
+										break
+							elif 'youtube.com' in url[0][0] or 'youtu.be' in url[0][0]:
+								await buildEmbed(msg, 'https://img.youtube.com/vi/{}/0.jpg'.format(get_id(url[0][0])))
+							elif 'dcinside.com' in url[0][0]:
+								await buildEmbed(msg, msg.attachments[0].url)
+							elif 'imgur' in url[0][0]:
+								if 'i.imgur' not in url[0][0]:
+									await buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content').replace('?fb', ''))
 								else:
-									await buildEmbed(msg, '')
+									await buildEmbed(msg, url[0][0])
+							elif 'https://tenor.com' in url[0][0]:
+								for img in BeautifulSoup(processed_url, 'html.parser').findAll('img', attrs={'src': True}):
+									if 'media1.tenor.com' in img.get('src'):
+										await buildEmbed(msg, img.get('src'))
+							else:
+								if msg.embeds and msg.embeds[0].url != url[0][0]:
+									await buildEmbed(msg, msg.embeds[0].url)
+								else:
+									if msg.attachments:
+										await buildEmbed(msg, msg.attachments[0].url)
+									else:
+										await buildEmbed(msg, '')
 					else:
 						if msg.attachments:
 							await buildEmbed(msg, msg.attachments[0].url)
 						else:
 							await buildEmbed(msg, '')
+
+async def on_message(message):
+
+
+
+	await bot.process_commands(message)
 
 def is_owner(ctx):
 	if str(ctx.message.author.id) == cfg["owner"]:
