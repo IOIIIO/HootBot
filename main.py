@@ -74,9 +74,9 @@ def get_id(url):
 		return pth[-1]
 
 """
-tweet is only used when we want to archive the text from a tweet
+tweet is only used when we want to archive the text from a tweet or embed
 """
-async def buildEmbed(msg, url, tweet = ''):
+async def buildEmbed(msg, url, tweet = '', author = ''):
 	if url != "":
 		if cfg["config"]["cache"] == True:
 			try:
@@ -90,11 +90,15 @@ async def buildEmbed(msg, url, tweet = ''):
 			
 	embed = discord.Embed()
 	if len(tweet):
-		embed.add_field(name='Tweet content', value=tweet, inline=False)
+		embed.add_field(name='Tweet/Embed Content', value=tweet, inline=False)
 	elif isinstance(msg, discord.Message) and len(msg.content):
 		embed.add_field(name='Content', value=msg.content, inline=False)
 	embed.add_field(name='Message Link', value='https://discordapp.com/channels/{}/{}/{}'.format(msg.guild.id, msg.channel.id, msg.id), inline=False)
-	embed.add_field(name='Author', value=msg.author.mention, inline=True)
+	if len(author):
+		auth = msg.guild.get_member_named(author).mention
+	else:
+		auth = msg.author.mention
+	embed.add_field(name='Author', value=auth, inline=True)
 	embed.add_field(name='Channel', value=msg.channel.mention, inline=True)
 	embed.set_image(url=url)
 
@@ -187,12 +191,26 @@ async def on_raw_reaction_add(payload):
 					else:
 						if msg.attachments:
 							await buildEmbed(msg, msg.attachments[0].url)
+						elif msg.embeds and msg.embeds[0].image.url:
+							auth = ""
+							for b in msg.embeds[0].to_dict()["fields"]:
+								if "Sender" in b["name"]:
+									auth = b["value"]
+							await buildEmbed(msg, msg.embeds[0].image.url, msg.embeds[0].description, auth)
 						else:
 							await buildEmbed(msg, '')
 
+@bot.event
 async def on_message(message):
-
-
+	if 'insta' in cfg[str(message.guild.id)]:
+		if cfg[str(message.guild.id)]['insta'] == True:
+			url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
+			if url != []:
+				if "instagram.com" in url[0][0]:
+					embed=discord.Embed(title="Instagram Embed", description=message.content)
+					embed.add_field(name='Sender', value=str(message.author))
+					embed.set_image(url=BeautifulSoup(requests.get(url[0][0].replace('mobile.', '')).text, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
+					await message.channel.send(embed=embed)
 
 	await bot.process_commands(message)
 
@@ -261,6 +279,25 @@ async def cache(ctx):
 				b = "enabled"
 			json.dump(cfg, open('bot.json', 'w'), indent=4)
 			await ctx.send("Succesfully changed cache state to: \"{}\"".format(b))
+
+"""
+Toggle automatic Instagram embeds.
+"""
+@bot.command(brief='Toggle automatic Instagram embeds.')
+@commands.has_permissions(administrator=True)
+async def instaembed(ctx):
+	if "insta" in cfg[str(ctx.message.guild.id)]:
+		if cfg[str(ctx.message.guild.id)]["insta"] == True:
+			cfg[str(ctx.message.guild.id)].update({'insta' : False})
+			b = "disabled"
+		else:
+			cfg[str(ctx.message.guild.id)].update({'insta' : True})
+			b = "enabled"
+	else:
+		cfg[str(ctx.message.guild.id)].update({'insta' : True})
+		b = "enabled"
+	json.dump(cfg, open('bot.json', 'w'), indent=4)
+	await ctx.send("Succesfully changed embed state to: \"{}\"".format(b))
 
 @cache.group(brief='Set imgur UserID.')
 async def user(ctx, *, b: str):
