@@ -213,21 +213,8 @@ async def on_raw_reaction_add(payload):
 async def return_reddit(url):
 	return str(praw.models.Submission(reddit=reddit, url=url[0][0]).url)
 
-@bot.event
-async def on_message(message):
-	if not isinstance(message.channel, discord.channel.DMChannel):
-		if 'insta' in cfg[str(message.guild.id)]:
-			if cfg[str(message.guild.id)]['insta'] == True:
-				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
-				if url != []:
-					if "instagram.com" in url[0][0]:
-						embed=discord.Embed(title="Instagram Embed", description=message.content)
-						embed.add_field(name='Sender', value=str(message.author))
-						embed.set_image(url=BeautifulSoup(requests.get(url[0][0].replace('mobile.', '')).text, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
-						await message.channel.send(embed=embed)
-
-		if 'reddit' in cfg[str(message.guild.id)]:
-			if cfg[str(message.guild.id)]['reddit'] == True:
+async def redembed(message):
+	if cfg[str(message.guild.id)]['reddit'] == True:
 				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
 				if url != []:
 					if "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
@@ -239,6 +226,25 @@ async def on_message(message):
 							await message.channel.send(embed=embed)
 						except:
 							pass
+
+async def insta(message):
+	if cfg[str(message.guild.id)]['insta'] == True:
+				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
+				if url != []:
+					if "instagram.com" in url[0][0]:
+						embed=discord.Embed(title="Instagram Embed", description=message.content)
+						embed.add_field(name='Sender', value=str(message.author))
+						embed.set_image(url=BeautifulSoup(requests.get(url[0][0].replace('mobile.', '')).text, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
+						await message.channel.send(embed=embed)
+
+@bot.event
+async def on_message(message):
+	if not isinstance(message.channel, discord.channel.DMChannel):
+		if 'insta' in cfg[str(message.guild.id)]:
+			await insta(message)
+
+		if 'reddit' in cfg[str(message.guild.id)]:
+			await redembed(message)
 
 	await bot.process_commands(message)
 
@@ -352,7 +358,7 @@ async def instagram(ctx):
 async def redd(ctx):
 	pass
 	
-#@commands.has_permissions(administrator=True)
+@commands.has_permissions(administrator=True)
 @redd.command(brief='Toggle automatic Reddit embeds.')
 async def enable(ctx):
 	if "reddit" in cfg[str(ctx.message.guild.id)]:
