@@ -2,3 +2,4 @@ discord
 BeautifulSoup4
 requests
 git+https://github.com/BryanH/imgurpython
+praw
