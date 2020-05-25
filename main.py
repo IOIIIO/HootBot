@@ -212,6 +212,16 @@ async def on_message(message):
 					embed.set_image(url=BeautifulSoup(requests.get(url[0][0].replace('mobile.', '')).text, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
 					await message.channel.send(embed=embed)
 
+	if 'reddit' in cfg[str(message.guild.id)]:
+		if cfg[str(message.guild.id)]['reddit'] == True:
+			url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
+			if url != []:
+				if "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
+					embed=discord.Embed(title="Reddit Embed", description=message.content)
+					embed.add_field(name='Sender', value=str(message.author))
+					embed.set_image(url=message.embeds[0].thumbnail.url)
+					await message.channel.send(embed=embed)
+
 	await bot.process_commands(message)
 
 def is_owner(ctx):
@@ -283,9 +293,14 @@ async def cache(ctx):
 """
 Toggle automatic Instagram embeds.
 """
-@bot.command(brief='Toggle automatic Instagram embeds.')
+
+@bot.group(brief="Allow bot to embed images which are normally broken")
+async def embed(ctx):
+	pass
+
+@embed.group(brief='Toggle automatic Instagram embeds.')
 @commands.has_permissions(administrator=True)
-async def instaembed(ctx):
+async def instagram(ctx):
 	if "insta" in cfg[str(ctx.message.guild.id)]:
 		if cfg[str(ctx.message.guild.id)]["insta"] == True:
 			cfg[str(ctx.message.guild.id)].update({'insta' : False})
@@ -295,6 +310,22 @@ async def instaembed(ctx):
 			b = "enabled"
 	else:
 		cfg[str(ctx.message.guild.id)].update({'insta' : True})
+		b = "enabled"
+	json.dump(cfg, open('bot.json', 'w'), indent=4)
+	await ctx.send("Succesfully changed embed state to: \"{}\"".format(b))
+
+@embed.group(brief='Toggle automatic Reddit embeds.')
+@commands.has_permissions(administrator=True)
+async def reddit(ctx):
+	if "reddit" in cfg[str(ctx.message.guild.id)]:
+		if cfg[str(ctx.message.guild.id)]["reddit"] == True:
+			cfg[str(ctx.message.guild.id)].update({'reddit' : False})
+			b = "disabled"
+		else:
+			cfg[str(ctx.message.guild.id)].update({'reddit' : True})
+			b = "enabled"
+	else:
+		cfg[str(ctx.message.guild.id)].update({'reddit' : True})
 		b = "enabled"
 	json.dump(cfg, open('bot.json', 'w'), indent=4)
 	await ctx.send("Succesfully changed embed state to: \"{}\"".format(b))
