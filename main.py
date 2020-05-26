@@ -249,10 +249,7 @@ async def on_message(message):
 	await bot.process_commands(message)
 
 def is_owner(ctx):
-	if str(ctx.message.author.id) == cfg["owner"]:
-		return True
-	else:
-		return False
+	return str(ctx.message.author.id) == cfg["owner"]
 
 """
 Used to setup the bot.
