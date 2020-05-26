@@ -213,25 +213,25 @@ async def on_raw_reaction_add(payload):
 async def return_reddit(url):
 	return str(praw.models.Submission(reddit=reddit, url=url[0][0]).url)
 
+async def redembed(message):
+	if cfg[str(message.guild.id)]['reddit'] == True:
+				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
+				if url != []:
+					if "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
+						try:
+							embed=discord.Embed(title="Reddit Embed", description=message.content)
+							embed.add_field(name='Sender', value=str(message.author))
+							b = await return_reddit(url)
+							embed.set_image(url=b)
+							await message.channel.send(embed=embed)
+						except:
+							pass
+
 @bot.event
 async def on_message(message):
 	if not isinstance(message.channel, discord.channel.DMChannel):
-		try:
-			if 'reddit' in cfg[str(message.guild.id)]:
-				if cfg[str(message.guild.id)]['reddit'] == True:
-					url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
-					if url != []:
-						if "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
-							try:
-								embed=discord.Embed(title="Reddit Embed", description=message.content)
-								embed.add_field(name='Sender', value=str(message.author))
-								b = await return_reddit(url)
-								embed.set_image(url=b)
-								await message.channel.send(embed=embed)
-							except:
-								pass
-		except:
-			print("line 217 exception")
+		if 'reddit' in cfg[str(message.guild.id)]:
+			await redembed(message)
 
 	await bot.process_commands(message)
 
@@ -325,7 +325,7 @@ async def embed(ctx):
 async def redd(ctx):
 	pass
 	
-#@commands.has_permissions(administrator=True)
+@commands.has_permissions(administrator=True)
 @redd.command(brief='Toggle automatic Reddit embeds.')
 async def enable(ctx):
 	if "reddit" in cfg[str(ctx.message.guild.id)]:
