@@ -227,22 +227,9 @@ async def redembed(message):
 						except:
 							pass
 
-async def insta(message):
-	if cfg[str(message.guild.id)]['insta'] == True:
-				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
-				if url != []:
-					if "instagram.com" in url[0][0]:
-						embed=discord.Embed(title="Instagram Embed", description=message.content)
-						embed.add_field(name='Sender', value=str(message.author))
-						embed.set_image(url=BeautifulSoup(requests.get(url[0][0].replace('mobile.', '')).text, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
-						await message.channel.send(embed=embed)
-
 @bot.event
 async def on_message(message):
 	if not isinstance(message.channel, discord.channel.DMChannel):
-		if 'insta' in cfg[str(message.guild.id)]:
-			await insta(message)
-
 		if 'reddit' in cfg[str(message.guild.id)]:
 			await redembed(message)
 
@@ -330,29 +317,9 @@ async def secret(ctx, *, b: str):
 		await ctx.send("Succesfully updated key.")
 	b = 0
 
-"""
-Toggle automatic Instagram embeds.
-"""
-
 @bot.group(brief="Allow bot to embed images which are normally broken")
 async def embed(ctx):
 	pass
-
-@embed.group(brief='Toggle automatic Instagram embeds.')
-@commands.has_permissions(administrator=True)
-async def instagram(ctx):
-	if "insta" in cfg[str(ctx.message.guild.id)]:
-		if cfg[str(ctx.message.guild.id)]["insta"] == True:
-			cfg[str(ctx.message.guild.id)].update({'insta' : False})
-			b = "disabled"
-		else:
-			cfg[str(ctx.message.guild.id)].update({'insta' : True})
-			b = "enabled"
-	else:
-		cfg[str(ctx.message.guild.id)].update({'insta' : True})
-		b = "enabled"
-	json.dump(cfg, open('bot.json', 'w'), indent=4)
-	await ctx.send("Succesfully changed embed state to: \"{}\"".format(b))
 
 @embed.group(name="reddit", brief="Configure reddit embed settings")
 async def redd(ctx):
@@ -481,5 +448,8 @@ async def override(ctx, msglink: str, link: str):
 
 	if msg_data[1] + msg_data[2] not in exceptions:
 		exceptions.append(msg_data[1] + msg_data[2])
+
+from insta import insta
+bot.add_cog(insta(bot))
 
 bot.run(cfg['token'])
