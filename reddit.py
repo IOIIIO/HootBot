@@ -19,7 +19,11 @@ class reddit(commands.Cog):
             # Form an API URL, like https://www.reddit.com/r/TheOwlHouse/comments/gqf70w/my_art_luz_and_amity_when_quarantine_is_over_what/.json
             api_url = '{}.json'.format(url)
             r = requests.get(api_url, headers = {'User-agent': 'RogueStarboard v1.0'}).json()
-            return r[0]["data"]["children"][0]["data"]["url"]
+            url = r[0]["data"]["children"][0]["data"]["url"]
+
+            # TODO: video embeds don't work
+            if not url.startswith("https://www.reddit.com/") and not url.startswith("https://v.redd.it/"):
+                return r[0]["data"]["children"][0]["data"]["url"]
         except Exception as e:
             print(e)
 
@@ -29,6 +33,7 @@ class reddit(commands.Cog):
         if cfg[str(message.guild.id)]['reddit'] == True:
             url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
             if url != []:
+                # TODO: Follow redd.it link redirect to call embed code on resulting long link
                 if "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
                     try:
                         embed=discord.Embed(title="Reddit Embed", description=message.content)
