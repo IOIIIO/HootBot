@@ -170,11 +170,11 @@ async def on_raw_reaction_add(payload):
 								"""
 								either archive the image in the tweet if there is one or archive the text
 								"""
-								res = json.loads(requests.get('https://api.twitter.com/1.1/statuses/lookup.json?id={}'.format(re.findall(r'.*?twitter\.com\/.*?\/status\/(\d*).*?', url[0][0])[0]), headers={"Authorization": "Bearer {}".format(cfg["config"]["twitter"])}).text)
+								res = json.loads(requests.get('https://api.twitter.com/1.1/statuses/lookup.json?id={}&tweet_mode=extended'.format(re.findall(r'.*?twitter\.com\/.*?\/status\/(\d*).*?', url[0][0])[0]), headers={"Authorization": "Bearer {}".format(cfg["config"]["twitter"])}).text)
 								if 'media' in res[0]['entities']:
 									await buildEmbed(msg, res[0]["entities"]["media"][0]["media_url"])
 								else:
-									await buildEmbed(msg, "", res[0]["text"])
+									await buildEmbed(msg, "", res[0]["full_text"])
 							elif 'youtube.com' in url[0][0] or 'youtu.be' in url[0][0]:
 								await buildEmbed(msg, 'https://img.youtube.com/vi/{}/0.jpg'.format(get_id(url[0][0])))
 							elif 'dcinside.com' in url[0][0]:
