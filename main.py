@@ -170,13 +170,11 @@ async def on_raw_reaction_add(payload):
 								"""
 								either archive the image in the tweet if there is one or archive the text
 								"""
-								for tag in BeautifulSoup(processed_url, 'html.parser').findAll('meta'):
-									if tag.get('property') == 'og:image' and 'profile_images' not in tag.get('content'):
-										await buildEmbed(msg, tag.get('content'))
-										break
-									elif tag.get('property') == 'og:description':
-										await buildEmbed(msg, '', tag.get('content'))
-										break
+								res = json.loads(requests.get('https://api.twitter.com/1.1/statuses/lookup.json?id={}'.format(re.findall(r'.*?twitter\.com\/.*?\/status\/(\d*).*?', url[0][0])[0]), headers={"Authorization": "Bearer {}".format(cfg["config"]["twitter"])}).text)
+								if 'media' in res[0]['entities']:
+									await buildEmbed(msg, res[0]["entities"]["media"][0]["media_url"])
+								else:
+									await buildEmbed(msg, "", res[0]["text"])
 							elif 'youtube.com' in url[0][0] or 'youtu.be' in url[0][0]:
 								await buildEmbed(msg, 'https://img.youtube.com/vi/{}/0.jpg'.format(get_id(url[0][0])))
 							elif 'dcinside.com' in url[0][0]:
@@ -271,7 +269,7 @@ async def presence(ctx, *, b: str):
 		await bot.change_presence(activity=discord.Game(name=b))
 
 """
-Change default presence.
+Change default prefix.
 """
 @bot.command(brief='Change the bot prefix.')
 async def prefix(ctx, *, b: str):
@@ -315,6 +313,14 @@ async def secret(ctx, *, b: str):
 		cfg["config"].update({'imgur_scr' : b})
 		json.dump(cfg, open('bot.json', 'w'), indent=4)
 		await ctx.send("Succesfully updated key.")
+	b = 0
+
+@bot.command(brief='Set twitter bearer.')
+async def twitter(ctx, *, b: str):
+	if is_owner(ctx):
+		cfg["config"].update({'twitter' : b})
+		json.dump(cfg, open('bot.json', 'w'), indent=4)
+		await ctx.send("Succesfully updated bearer key.")
 	b = 0
 
 @bot.group(brief="Allow bot to embed images which are normally broken")
@@ -425,7 +431,7 @@ async def del_entry(ctx, msglink: str):
 	msg_data[2] -> msg id
 	"""
 
-	cfg[ctx.guild.id]['ignore_list'].remove(msg_data[1]+msg_data[2])
+	cfg[ctx.guild.id]['ignore_list'].remove(str(msg_data[1])+str(msg_data[2]))
 	json.dump(cfg, open('bot.json', 'w'), indent=4)
 
 
