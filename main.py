@@ -328,7 +328,6 @@ async def secret(ctx, *, b: str):
 		await ctx.send("Succesfully updated key.")
 	b = 0
 
-<<<<<<< HEAD
 @bot.command(brief='Set twitter bearer.')
 async def twitter(ctx, *, b: str):
 	if is_owner(ctx):
@@ -336,11 +335,9 @@ async def twitter(ctx, *, b: str):
 		json.dump(cfg, open('bot.json', 'w'), indent=4)
 		await ctx.send("Succesfully updated bearer key.")
 	b = 0
-=======
 """
 Toggle automatic Instagram embeds.
 """
->>>>>>> 05c6c6fcf3ba8b1cff9b42cd444c429bef591536
 
 @bot.group(brief="Allow bot to embed images which are normally broken")
 async def embed(ctx):
