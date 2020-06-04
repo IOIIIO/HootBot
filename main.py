@@ -163,18 +163,19 @@ async def on_raw_reaction_add(payload):
 							<meta property="og:image" content="link" />
 							"""
 							if 'deviantart.com' in url[0][0] or 'www.instagram.com' in url[0][0] or 'tumblr.com' in url[0][0] or 'pixiv.net' in url[0][0]:
-								print(msg)
-								print(BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}))
 								await buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
 							elif 'twitter.com' in url[0][0]:
 								"""
 								either archive the image in the tweet if there is one or archive the text
 								"""
 								res = json.loads(requests.get('https://api.twitter.com/1.1/statuses/lookup.json?id={}&tweet_mode=extended'.format(re.findall(r'.*?twitter\.com\/.*?\/status\/(\d*).*?', url[0][0])[0]), headers={"Authorization": "Bearer {}".format(cfg["config"]["twitter"])}).text)
-								if 'media' in res[0]['entities']:
-									await buildEmbed(msg, res[0]["entities"]["media"][0]["media_url"])
+								if 'user' in res[0]:
+									if 'media' in res[0]['entities']:
+										await buildEmbed(msg, res[0]["entities"]["media"][0]["media_url"])
+									else:
+										await buildEmbed(msg, "", res[0]["full_text"])
 								else:
-									await buildEmbed(msg, "", res[0]["full_text"])
+									print(res)
 							elif 'youtube.com' in url[0][0] or 'youtu.be' in url[0][0]:
 								await buildEmbed(msg, 'https://img.youtube.com/vi/{}/0.jpg'.format(get_id(url[0][0])))
 							elif 'dcinside.com' in url[0][0]:
