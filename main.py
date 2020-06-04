@@ -60,17 +60,6 @@ else:
 	sc()
 	cfg = json.load(open('bot.json'))
 
-
-
-exceptions = []
-try:
-	reddit = praw.Reddit(client_id=cfg["config"]["reddit_id"],
-                     client_secret=cfg["config"]["reddit_scr"],
-                     refresh_token=cfg["config"]["reddit_tkn"],
-                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36 Edg/83.0.478.37")
-except:
-	pass
-
 # https://stackoverflow.com/a/45579374
 def get_id(url):
 	u_pars = urlparse(url)
@@ -117,9 +106,6 @@ bot = commands.Bot(command_prefix=cfg["config"]["prefix"], owner=cfg["owner"])
 @bot.event
 async def on_ready():
 	print('Logged in as {}'.format(bot.user.name))
-	if cfg["config"] and cfg["config"]["reddit_id"] and cfg["config"]["reddit_scr"] != "":
-		print('Logged into Reddit as {}'.format(reddit.user.me()))
-	
 	if cfg["config"] and cfg["config"]["presence"] and cfg['config']["presence"] != "":
 		await bot.change_presence(activity=discord.Game(name=cfg["config"]['presence']))
 
@@ -209,23 +195,6 @@ async def on_raw_reaction_add(payload):
 						else:
 							await buildEmbed(msg, '')
 
-async def return_reddit(url):
-	return str(praw.models.Submission(reddit=reddit, url=url[0][0]).url)
-
-async def redembed(message):
-	if cfg[str(message.guild.id)]['reddit'] == True:
-				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
-				if url != []:
-					if "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
-						try:
-							embed=discord.Embed(title="Reddit Embed", description=message.content)
-							embed.add_field(name='Sender', value=str(message.author))
-							b = await return_reddit(url)
-							embed.set_image(url=b)
-							await message.channel.send(embed=embed)
-						except:
-							pass
-
 async def insta(message):
 	if cfg[str(message.guild.id)]['insta'] == True:
 				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
@@ -241,9 +210,6 @@ async def on_message(message):
 	if not isinstance(message.channel, discord.channel.DMChannel):
 		if 'insta' in cfg[str(message.guild.id)]:
 			await insta(message)
-
-		if 'reddit' in cfg[str(message.guild.id)]:
-			await redembed(message)
 
 	await bot.process_commands(message)
 
@@ -360,50 +326,6 @@ async def instagram(ctx):
 	json.dump(cfg, open('bot.json', 'w'), indent=4)
 	await ctx.send("Succesfully changed embed state to: \"{}\"".format(b))
 
-@embed.group(name="reddit", brief="Configure reddit embed settings")
-async def redd(ctx):
-	pass
-	
-@commands.has_permissions(administrator=True)
-@redd.command(brief='Toggle automatic Reddit embeds.')
-async def enable(ctx):
-	if "reddit" in cfg[str(ctx.message.guild.id)]:
-		if cfg[str(ctx.message.guild.id)]["reddit"] == True:
-			cfg[str(ctx.message.guild.id)].update({'reddit' : False})
-			b = "disabled"
-		else:
-			cfg[str(ctx.message.guild.id)].update({'reddit' : True})
-			b = "enabled"
-	else:
-		cfg[str(ctx.message.guild.id)].update({'reddit' : True})
-		b = "enabled"
-	json.dump(cfg, open('bot.json', 'w'), indent=4)
-	await ctx.send("Succesfully changed embed state to: \"{}\"".format(b))
-
-@redd.command(brief='Set Reddit ID.')
-async def id(ctx, *, b: str):
-	if is_owner(ctx):
-		cfg["config"].update({'reddit_id' : b})
-		json.dump(cfg, open('bot.json', 'w'), indent=4)
-		await ctx.send("Succesfully updated key.")
-	b = 0
-
-@redd.command(brief='Set Reddit Secret.')
-async def secret(ctx, *, b: str):
-	if is_owner(ctx):
-		cfg["config"].update({'reddit_scr' : b})
-		json.dump(cfg, open('bot.json', 'w'), indent=4)
-		await ctx.send("Succesfully updated key.")
-	b = 0
-
-@redd.command(brief='Set Reddit Token.')
-async def token(ctx, *, b: str):
-	if is_owner(ctx):
-		cfg["config"].update({'reddit_tkn' : b})
-		json.dump(cfg, open('bot.json', 'w'), indent=4)
-		await ctx.send("Succesfully updated key.")
-	b = 0
-
 """
 Update the bot and restarts
 """
@@ -487,5 +409,8 @@ async def override(ctx, msglink: str, link: str):
 
 	if msg_data[1] + msg_data[2] not in exceptions:
 		exceptions.append(msg_data[1] + msg_data[2])
+
+from reddit import reddit
+bot.add_cog(reddit(bot))
 
 bot.run(cfg['token'])
