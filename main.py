@@ -462,6 +462,29 @@ async def pip(ctx):
 			await bot.logout()
 			os.execl(sys.executable, sys.executable, * sys.argv)
 
+@update.group(brief='Updates the bot to the latest commit, stashing any local changes and restarts.')
+async def stash(ctx):
+	if is_owner(ctx):
+		e = os.popen('git pull').read()
+		if "Already up to date." in e:
+			r = "Not restarting."
+			c = 0xff0000
+			p = ""
+		else:
+			log = json.loads(os.popen('curl --data "text=$(git stash)" https://file.io').read())["link"]
+			e = os.popen('git pull').read()
+			r = "Restarting!"
+			c = 0x00ff00
+			p = "[Click here for log!]({})".format(log)
+		embed=discord.Embed(title="HootBot Updater", color=c)
+		embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
+		if p != "":
+			embed.add_field(name="git stash return:", value="{}".format(p), inline=False)
+		await ctx.send(embed=embed)
+		if c == 0x00ff00:
+			await bot.logout()
+			os.execl(sys.executable, sys.executable, * sys.argv)
+
 """
 Deletes the given message from archive cache.
 """
