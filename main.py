@@ -189,6 +189,8 @@ async def on_raw_reaction_add(payload):
 								for img in BeautifulSoup(processed_url, 'html.parser').findAll('img', attrs={'src': True}):
 									if 'media1.tenor.com' in img.get('src'):
 										await buildEmbed(msg, img.get('src'))
+							elif "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
+								await buildEmbed(msg, return_reddit(url[0][0]))
 							else:
 								if msg.embeds and msg.embeds[0].url != url[0][0]:
 									await buildEmbed(msg, msg.embeds[0].url)
@@ -209,20 +211,33 @@ async def on_raw_reaction_add(payload):
 						else:
 							await buildEmbed(msg, '')
 
-async def return_reddit(url):
-	return str(praw.models.Submission(reddit=reddit, url=url[0][0]).url)
+def return_reddit(url):
+	api_url = '{}.json'.format(url)
+	r = requests.get(api_url, headers = {'User-agent': 'Starboard v1.0'}).json()
+	try:
+		url = r[0]["data"]["children"][0]["data"]["media_metadata"]["u6yr7w5mstb51"]["s"]["u"].replace("&amp;", "&")
+	except:
+		url = r[0]["data"]["children"][0]["data"]["preview"]["images"][0]["source"]["url"].replace("&amp;", "&")
+	#else:
+	#	url = ""
+	if ".jpg" in url:
+		return url
+	else:
+		return ''
 
 async def redembed(message):
 	if cfg[str(message.guild.id)]['reddit'] == True:
 				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)
 				if url != []:
-					if "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
+					url2 = re.sub(r'\?.*', "", url[0][0])
+					if "reddit.com" in url2 or "redd.it" in url2:
 						try:
-							embed=discord.Embed(title="Reddit Embed", description=message.content)
-							embed.add_field(name='Sender', value=str(message.author))
-							b = await return_reddit(url)
-							embed.set_image(url=b)
-							await message.channel.send(embed=embed)
+							b = return_reddit(url2)
+							if b != '':
+								embed=discord.Embed(title="Reddit Embed", description=message.content)
+								embed.add_field(name='Sender', value=str(message.author))
+								embed.set_image(url=b)
+								await message.channel.send(embed=embed)
 						except:
 							pass
 
