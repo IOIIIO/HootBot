@@ -486,6 +486,25 @@ async def stash(ctx):
 			os.execl(sys.executable, sys.executable, * sys.argv)
 
 """
+Print neofetch in chat
+"""
+@bot.command(brief='Prints the specs of the machine we\'re running on. Linux/macOS hosts only.')
+@commands.has_permissions()
+async def neofetch(ctx):
+	if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
+		if os.path.isfile("nf/neofetch"):
+			e = os.popen('nf/neofetch --stdout').read().split("\n",2)[2];
+			embed = discord.Embed()
+			embed.add_field(name="Neofetch", value=e)
+			await ctx.send(embed=embed)
+		else:
+			await ctx.send("Installing Neofetch.")
+			os.popen('git clone https://github.com/dylanaraps/neofetch.git nf')
+			await ctx.send("Installed, run the command again.")
+	else:
+		await ctx.send("Command not supported on this platform.")
+
+"""
 Deletes the given message from archive cache.
 """
 @bot.command(brief='Removes the given message from the archive cache.')
