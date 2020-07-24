@@ -287,7 +287,7 @@ async def setup(ctx, archive_channel: discord.TextChannel, archive_emote: discor
 	}
 	json.dump(cfg, open('bot.json', 'w'), indent=4)
 
-@bot.command(brief='Change the emote amount requirement.')
+@bot.command(help="Sets the amount of emotes required for a message to reach starboard.", brief='Change the emote amount requirement.')
 @commands.has_permissions(administrator=True)
 async def setamount(ctx, b: int):
 	if str(ctx.guild.id) not in cfg:
