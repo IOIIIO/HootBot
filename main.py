@@ -287,6 +287,16 @@ async def setup(ctx, archive_channel: discord.TextChannel, archive_emote: discor
 	}
 	json.dump(cfg, open('bot.json', 'w'), indent=4)
 
+@bot.command(brief='Change the emote amount requirement.')
+@commands.has_permissions(administrator=True)
+async def setamount(ctx, b: int):
+	if str(ctx.guild.id) not in cfg:
+		await ctx.send("Server not in config. Use setup command first.")
+	else:
+		cfg[str(ctx.guild.id)]["bot"]['archive_emote_amount'] = b
+	await ctx.send("Succesfully changed amount to {}".format(b))
+	json.dump(cfg, open('bot.json', 'w'), indent=4)
+
 """
 Change default presence.
 """
