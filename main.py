@@ -523,8 +523,7 @@ def showID(id):
 	"""
 	Returns the list of the next episode to come in 0, pre-formatted date in 1 and if no new episode is present, returns the latest episode with 2 set to 1
 	"""
-	print(testtest := quote_plus(id))
-	firstAPI = json.loads(urllib.request.urlopen("https://api.tvmaze.com/singlesearch/shows?q={}".format(testtest)).read().decode())
+	firstAPI = json.loads(urllib.request.urlopen("https://api.tvmaze.com/singlesearch/shows?q={}".format(quote_plus(id))).read().decode())
 	showAPI = json.loads(urllib.request.urlopen("https://api.tvmaze.com/shows/{}/episodes".format(firstAPI["id"])).read().decode())
 	b = None; c = None
 	for a in reversed(showAPI):
