@@ -56,7 +56,7 @@ class CommandErrorHandler(commands.Cog):
         elif isinstance(error, commands.MissingRequiredArgument) or (isinstance(error, commands.BadArgument) and ctx.command.qualified_name != 'tag_list'):
             await ctx.send('Wrong message syntax. Use the command as follows:')
             await ctx.send_help(ctx.command)
-
+        
 
         else:
             # All other Errors not returned come here. And we can just print the default TraceBack.

@@ -3,10 +3,18 @@ from discord.ext import commands
 import cogs.support.db as dbc
 import sys, os
 from discord.ext.commands.cooldowns import BucketType
+import cogs.support.perms as perms
 
 class Default(commands.Cog, name="General Commands"):
 	def __init__(self, bot):
 		self.bot = bot
+
+	@commands.command()
+	@perms.mod()
+	async def say(self, ctx, *, repl: str):
+		length = len(ctx.command.qualified_name) + len(self.bot.command_prefix)
+		message = ctx.message.clean_content[length:]
+		await ctx.send(message)
 
 	@commands.command(brief='Sets the default presence.')
 	@commands.is_owner()
