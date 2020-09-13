@@ -15,7 +15,7 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 	    pass
 
 	@embed.group(brief='Toggle automatic Instagram embeds.')
-	@commands.has_guild_permissions(manage_messages=True)
+	@perms.mod()
 	async def instagram(self, ctx):
 		if dbc.ret(str(ctx.message.guild.id), "insta") == None or False:
 			b = True
@@ -26,7 +26,7 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 
 
 	@embed.command(brief='Toggle automatic Reddit embeds.')
-	@commands.has_guild_permissions(manage_messages=True)
+	@perms.mod()
 	async def reddit(self, ctx):
 		if dbc.ret(str(ctx.message.guild.id), "reddit") == None or False:
 			b = True
