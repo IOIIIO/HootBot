@@ -5,6 +5,7 @@ import re
 from bs4 import BeautifulSoup
 import requests
 import cogs.support.reddit as redcog
+import cogs.support.perms as perms
 
 class Embed(commands.Cog, name="Image Embedding Commands"):
 	def __init__(self, bot):

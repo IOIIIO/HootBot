@@ -8,6 +8,7 @@ import requests
 from urllib.parse import parse_qs, urlparse, quote_plus
 import cogs.support.db as dbc
 import cogs.support.perms as perms
+
 class Starboard(commands.Cog, name="Starboard Commands"):
 	def __init__(self, bot):
 		self.bot = bot
