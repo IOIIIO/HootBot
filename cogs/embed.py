@@ -13,9 +13,10 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 		self.bot = bot
 
 	@commands.group()
+	@checks.mod()
 	async def embed(self, ctx):
 		"""Generic container for embed commands. run <p>help embed for more info."""
-	    pass
+		return
 
 	@embed.group()
 	@checks.mod()
