@@ -1,4 +1,5 @@
 import os, sys, subprocess
+import cogs.support.db as dbc
 
 class Launch:
     def __init__(self):
@@ -11,13 +12,19 @@ class Launch:
         try:
             import dataset
         except:
-            self.head("Failed to load required modules. Do you wish to download them?")
+            self.head("Failed to load required modules.")
+            print("Do you wish to download them?")
             print("")
-            self.req()
-            print("Please launch the program again!")
-            exit()
-        db = dataset.connect('sqlite:///settings.db')
-        self.settings = db['bot']
+            x = input("y/n: ")
+            if x == "y":
+                self.req()
+                print("Please launch the program again!")
+                exit()
+            else:
+                print("Can't start without requirements.")
+                exit()
+            
+        self.settings = dbc.db['bot']
         #print(self.settings.find_one(name="token"))
         #exit()
         print(testa := self.settings.find_one(name="token"))
@@ -35,14 +42,14 @@ class Launch:
                 self.token()
             if failO == True:
                 self.id()
-        #self.menu()
-        exit()
+        self.menu()
         
     def menu(self):
         self.head("Boot Menu")
         print("")
         print("1. Boot bot")
         print("2. Maintenance menu")
+        print("")
         print("3. Exit")
         x = input("Type number: ")
         if x == "1":
@@ -64,7 +71,10 @@ class Launch:
         print("3. Update all")
         print("4. Delete database")
         print("5. Factory reset")
-        print("6. Go back")
+        print("6. Change owner ID")
+        print("7. Change bot token")
+        print("")
+        print("8. Go back")
         x = input("Type number: ")
         if x == "1":
             self.update()
@@ -83,6 +93,12 @@ class Launch:
             self.factory()
             self.maintenance()
         elif x == "6":
+            self.id()
+            self.maintenance()
+        elif x == "7":
+            self.token()
+            self.maintenance()
+        elif x == "8":
             self.menu()
         else:
             print("Invalid option!")
@@ -118,7 +134,7 @@ class Launch:
     def req(self, wipe = True):
         if wipe == True:
             self.cls()
-        os.system("pip3 install -r requirements.txt")
+        subprocess.check_call([sys.executable, "-m", "pip", "install",  "-r", "requirements.txt"])
 
     def update(self):
         self.cls()
@@ -140,20 +156,14 @@ class Launch:
         self.cls()
         print("Enter the user ID of the bot owner.")
         id = input("")
-        if self.settings.find_one(name="owner_id") is None:
-            self.settings.insert(dict(name="owner_id", value=id))
-        else:
-            self.settings.update(dict(name="owner_id", value=id) ['name'])
+        dbc.save("owned_id", id)
 
     def token(self):
         self.cls()
         print("Enter the bot token you got from the Discord developer site.")
         token = input("")
         if "." in token:
-            if self.settings.find_one(name="token") is None:
-                self.settings.insert(dict(name="token", value=token))
-            else:
-                self.settings.update(dict(name="token", value=token) ['name'])
+            dbc.save("token", token)
         else:
             print("That doesn't look like a valid token!")
             self.token()

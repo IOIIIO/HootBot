@@ -3,3 +3,5 @@ bot.json
 README.md
 __pycache__
 settings.db
+nf/*
+*.db

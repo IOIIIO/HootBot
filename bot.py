@@ -2,13 +2,16 @@ try:
     import discord
     import traceback
     from discord.ext import commands
-    import dataset
 except:
     print("Failed to load a module. Make sure to start the bot using start.py")
     exit()
 
+import cogs.support.db as dbc
+
 try:
-    botToken = 'b'
+    #botToken = dbc.db['bot'].find_one(name="token")["value"]
+    botToken = dbc.ret('bot', "token")
+    print(botToken)
 except Exception as e:
     print("Failed to set token.")
     print("Reason: {}".format(e))
