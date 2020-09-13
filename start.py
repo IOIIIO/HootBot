@@ -27,21 +27,29 @@ class Launch:
         self.settings = dbc.db['bot']
         #print(self.settings.find_one(name="token"))
         #exit()
-        print(testa := self.settings.find_one(name="token"))
+        #print(testa := self.settings.find_one(name="token"))
+        testa = dbc.ret('bot', "token")
         if testa is None:
             print(testa)
             failT = True
-        print(testb := self.settings.find_one(name="owner_id"))
+        #print(testb := self.settings.find_one(name="owner_id"))
+        testb = dbc.ret('bot', "owner_id")
         if testb is None:
             print(testb)
             failO = True
-        if failT or failO is not False:
+        testc = dbc.ret('bot', "prefix")
+        if testc is None:
+            print(testc)
+            failP = True
+        if failT or failO or failP is not False:
             self.head("First boot or missing files!")
             print("")
             if failT == True:
                 self.token()
             if failO == True:
                 self.id()
+            if failP == True:
+                self.prefix()
         self.menu()
         
     def menu(self):
@@ -73,8 +81,9 @@ class Launch:
         print("5. Factory reset")
         print("6. Change owner ID")
         print("7. Change bot token")
+        print('8. Change bot prefix')
         print("")
-        print("8. Go back")
+        print("9. Go back")
         x = input("Type number: ")
         if x == "1":
             self.update()
@@ -99,6 +108,9 @@ class Launch:
             self.token()
             self.maintenance()
         elif x == "8":
+            self.prefix()
+            self.maintenance()
+        elif x == "9":
             self.menu()
         else:
             print("Invalid option!")
@@ -156,14 +168,20 @@ class Launch:
         self.cls()
         print("Enter the user ID of the bot owner.")
         id = input("")
-        dbc.save("owned_id", id)
+        dbc.save("bot", "owner_id", id)
+
+    def prefix(self):
+        self.cls()
+        print("Enter the desired prefix for the bot.")
+        id = input("")
+        dbc.save("bot", "prefix", id)
 
     def token(self):
         self.cls()
         print("Enter the bot token you got from the Discord developer site.")
         token = input("")
         if "." in token:
-            dbc.save("token", token)
+            dbc.save("bot", "token", token)
         else:
             print("That doesn't look like a valid token!")
             self.token()

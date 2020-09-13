@@ -7,6 +7,7 @@ except:
     exit()
 
 import cogs.support.db as dbc
+import sys
 
 try:
     #botToken = dbc.db['bot'].find_one(name="token")["value"]
@@ -17,8 +18,8 @@ except Exception as e:
     print("Reason: {}".format(e))
     exit()
 
-bot = commands.Bot(command_prefix='#', description="HootBot, hooting your images to safety!")
-extensions = []
+bot = commands.Bot(command_prefix=dbc.ret('bot', 'prefix'), description="HootBot, hooting your images to safety!")
+extensions = ['cogs.default']
 
 if __name__ == '__main__':
     for extension in extensions:
@@ -30,9 +31,10 @@ if __name__ == '__main__':
             
 @bot.event
 async def on_ready():
-	print('Logged in as {}, {}'.format(bot.user.name, bot.user.id))
-	await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="$help for help"))
-	print('Startup Complete')
-	print('...')
+    print('Logged in as {}, {}'.format(bot.user.name, bot.user.id))
+    if b := dbc.ret('bot', 'status') is not None:
+        await bot.change_presence(activity=discord.Game(name=b))
+    print('Startup Complete')
+    print('...')
 
 bot.run(botToken, bot=True, reconnect=True)

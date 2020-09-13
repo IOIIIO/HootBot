@@ -299,26 +299,12 @@ async def setamount(ctx, b: int):
 	await ctx.send("Succesfully changed amount to {}".format(b))
 	json.dump(cfg, open('bot.json', 'w'), indent=4)
 
-"""
-Change default presence.
-"""
-@bot.command(brief='Sets the default presence.')
-async def presence(ctx, *, b: str):
-	if is_owner(ctx):
-		cfg["config"].update({'presence' : b})
-		json.dump(cfg, open('bot.json', 'w'), indent=4)
-		await bot.change_presence(activity=discord.Game(name=b))
+
 
 """
 Change default prefix.
 """
-@bot.command(brief='Change the bot prefix.')
-async def prefix(ctx, *, b: str):
-	if is_owner(ctx):
-		cfg["config"].update({'prefix' : b})
-		json.dump(cfg, open('bot.json', 'w'), indent=4)
-		bot.command_prefix = b
-		await ctx.send("Succesfully changed prefix to: \"{}\"".format(b))
+
 
 """
 Toggle whether cache should be used.
@@ -434,133 +420,17 @@ async def token(ctx, *, b: str):
 """
 Update the bot and restarts
 """
-@bot.group(brief='Updates the bot to the latest commit and restarts if necessary.')
-async def update(ctx):
-	if ctx.invoked_subcommand is None:
-		if is_owner(ctx):
-			e = os.popen('git pull').read()
-			if "Already up to date." in e:
-				r = "Not restarting."
-				c = 0xff0000
-			else:
-				r = "Restarting!"
-				c = 0x00ff00
-			embed=discord.Embed(title="HootBot Updater", color=c)
-			embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
-			await ctx.send(embed=embed)
-			if c == 0x00ff00:
-				await bot.logout()
-				os.execl(sys.executable, sys.executable, * sys.argv)
 
-@update.group(brief='Updates the bot to the latest commit, updates requirements and restarts.')
-async def pip(ctx):
-	if is_owner(ctx):
-		e = os.popen('git pull').read()
-		if "Already up to date." in e:
-			r = "Not restarting."
-			c = 0xff0000
-			p = ""
-		else:
-			log = json.loads(os.popen('curl --data "text=$(pip3 install -r requirements.txt)" https://file.io').read())["link"]
-			r = "Restarting!"
-			c = 0x00ff00
-			p = "[Click here for log!]({})".format(log)
-		embed=discord.Embed(title="HootBot Updater", color=c)
-		embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
-		if p != "":
-			embed.add_field(name="pip return:", value="{}".format(p), inline=False)
-		await ctx.send(embed=embed)
-		if c == 0x00ff00:
-			await bot.logout()
-			os.execl(sys.executable, sys.executable, * sys.argv)
-
-@update.group(brief='Updates the bot to the latest commit, stashing any local changes and restarts.')
-async def stash(ctx):
-	if is_owner(ctx):
-		e = os.popen('git pull').read()
-		if "Already up to date." in e:
-			r = "Not restarting."
-			c = 0xff0000
-			p = ""
-		else:
-			log = json.loads(os.popen('curl --data "text=$(git stash)" https://file.io').read())["link"]
-			e = os.popen('git pull').read()
-			r = "Restarting!"
-			c = 0x00ff00
-			p = "[Click here for log!]({})".format(log)
-		embed=discord.Embed(title="HootBot Updater", color=c)
-		embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
-		if p != "":
-			embed.add_field(name="git stash return:", value="{}".format(p), inline=False)
-		await ctx.send(embed=embed)
-		if c == 0x00ff00:
-			await bot.logout()
-			os.execl(sys.executable, sys.executable, * sys.argv)
 
 """
 Print neofetch in chat
 """
-@bot.command(brief='Prints the specs of the machine we\'re running on. Linux/macOS hosts only.')
-@commands.has_permissions()
-async def neofetch(ctx):
-	if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
-		if os.path.isfile("nf/neofetch"):
-			e = os.popen('nf/neofetch --stdout').read().split("\n",2)[2];
-			embed = discord.Embed()
-			embed.add_field(name="Neofetch", value=e)
-			await ctx.send(embed=embed)
-		else:
-			await ctx.send("Installing Neofetch.")
-			os.popen('git clone https://github.com/dylanaraps/neofetch.git nf')
-			await ctx.send("Installed, run the command again.")
-	else:
-		await ctx.send("Command not supported on this platform.")
+
 
 """
 Show when the next episode of the show will air.
 """
-def showID(id):
-	"""
-	Returns the list of the next episode to come in 0, pre-formatted date in 1 and if no new episode is present, returns the latest episode with 2 set to 1
-	"""
-	firstAPI = json.loads(urllib.request.urlopen("https://api.tvmaze.com/singlesearch/shows?q={}".format(quote_plus(id))).read().decode())
-	showAPI = json.loads(urllib.request.urlopen("https://api.tvmaze.com/shows/{}/episodes".format(firstAPI["id"])).read().decode())
-	b = None; c = None
-	for a in reversed(showAPI):
-		d = datetime.datetime.strptime(a['airstamp'].replace("+00:00", ""), "%Y-%m-%dT%H:%M:%S")
-		if d > datetime.datetime.utcnow():
-			b = a; c = d
-		else:
-			if b != None:
-				return(b, c, 0, firstAPI)
-			else:
-				return(a, d, 1, firstAPI)
 
-@bot.command(brief='Show when the next episode of the show will air.')
-@commands.has_permissions()
-async def schedule(ctx, *, id:str=None):
-	tic = time.perf_counter()
-	await ctx.channel.trigger_typing()
-	try:
-		if not id:
-			temp = showID("The Owl House")
-		else:
-			temp = showID(id)
-		if temp[2] != 1:
-			embed=discord.Embed(title="New Episode Coming!", color=0x00FF00)
-		else:
-			embed=discord.Embed(title="No New Episode Found", description="Showing latest episode instead ", color=0xFF0000)
-		embed.set_author(name="{} Schedule".format(temp[3]["name"]), url=temp[3]["url"])
-		embed.add_field(name="Title:", value=temp[0]["name"], inline=False)
-		embed.add_field(name="Release Date", value=temp[1].strftime('%d %b %Y UTC'), inline=True)
-		embed.add_field(name="Release Time", value=temp[1].strftime('%H:%M UTC'), inline=True)
-		embed.add_field(name="Link to Countdown", value=temp[1].strftime('[Click Here](https://www.timeanddate.com/countdown/generic?iso=%Y%m%dT%H%M&msg={}&csz=1)'.format(temp[0]['name'].replace(" ", "+"))), inline=False)
-		embed.add_field(name="Link to Episode", value="[Click Here]({})".format(temp[0]["url"]), inline=True)
-		toc = time.perf_counter()
-		embed.set_footer(text="Generated in {} seconds.".format(round(toc-tic,2)))
-		await ctx.send(embed=embed)
-	except:
-		await ctx.send("Couldn't reach API or find show. Try again later.")
 
 
 """
