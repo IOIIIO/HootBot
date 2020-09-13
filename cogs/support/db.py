@@ -1,8 +1,11 @@
 import dataset
+import ast
 
 db = dataset.connect('sqlite:///settings.db')
 
 def save(sheet, name, value):
+	if type(value) == list:
+		value = str(value)
 	if db[sheet].find_one(name=name) is None:
 		db[sheet].insert(dict(name=name, value=value))
 	else:
@@ -14,15 +17,27 @@ def ret(sheet, name):
 	else:
 		return None
 
+def retar(sheet, name):
+	if ret(sheet, name) != None:
+		c = ast.literal_eval(ret(sheet, name))
+		return(c)
+	else:
+		return None
+
 def append(sheet, name, value):
-	if b := ret(sheet, name) != None:
-		b.append(value)
+	if retar(sheet, name) != None:
+		b = retar(sheet, name)
+		try:
+			b.append(value)
+		except:
+			return None
 		save(sheet, name, b)
 	else:
 		save(sheet, name, value)
 
 def remove(sheet, name, value):
-	if b := ret(sheet, name) != None:
+	if retar(sheet, name) != None:
+		b = retar(sheet, name)
 		try:
 			b.remove(value)
 		except:

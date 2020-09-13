@@ -8,7 +8,6 @@ import requests
 from urllib.parse import parse_qs, urlparse, quote_plus
 import cogs.support.db as dbc
 import cogs.support.perms as perms
-
 class Starboard(commands.Cog, name="Starboard Commands"):
 	def __init__(self, bot):
 		self.bot = bot
@@ -49,17 +48,17 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		embed.add_field(name='Channel', value=msg.channel.mention, inline=True)
 		embed.set_image(url=url)
 
-		await self.bot.get_channel(dbc.ret(str(msg.guild.id), 'archive_channel')).send(embed=embed)
+		await self.bot.get_channel(int(dbc.ret(str(msg.guild.id), 'archive_channel'))).send(embed=embed)
 
 	@commands.Cog.listener()
 	async def on_raw_reaction_add(self, payload):
 		msg = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
-		if str(payload.channel_id)+str(payload.message_id) in dbc.ret(str(msg.guild.id), 'ignore_list'):
+		if str(payload.channel_id)+str(payload.message_id) in dbc.retar(str(msg.guild.id), 'ignore_list'):
 			return
 
 		for reaction in msg.reactions:
-			if str(reaction) == dbc.ret(str(msg.guild.id), 'archive_emote'):
+			if reaction.emoji.id == int(dbc.ret(str(msg.guild.id), 'archive_emote')):
 				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', msg.content)
 				if url:
 					if 'dcinside.com' in url[0][0] and not msg.attachments:
@@ -67,13 +66,13 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 
 						dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						return
-				if reaction.count >= dbc.ret(str(msg.guild.id), 'archive_emote_amount'):
+				if reaction.count >= int(dbc.ret(str(msg.guild.id), 'archive_emote_amount')):
 					if str(payload.channel_id)+str(payload.message_id) in self.exceptions:
 						await self.__buildEmbed(msg, self.exceptions[str(payload.channel_id)+str(payload.message_id)])
 
 						self.exceptions.remove(str(payload.channel_id)+str(payload.message_id))
 					else:
-						dbc.append([str(msg.guild.id), 'ignore_list'], str(payload.channel_id)+str(payload.message_id))
+						dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						if url:
 							if msg.attachments:
 								await self.__buildEmbed(msg, msg.attachments[0].url)
@@ -145,8 +144,12 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[1] -> channel id
 		msg_data[2] -> msg id
 		"""
-
-		dbc.remove(str(ctx.guild.id), 'ignore_list', str(msg_data[1])+str(msg_data[2]))
+		try:
+			dbc.remove(str(ctx.guild.id), 'ignore_list', str(msg_data[1])+str(msg_data[2]))
+		except:
+			ctx.send("Failed to remove from database")
+			return
+		ctx.send("Removed.")
 
 	@commands.command(brief='Overrides the image that was going to the archived originally.')
 	@perms.mod()
@@ -179,20 +182,21 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		await ctx.send("Succesfully changed amount to {}".format(b))
 
 	@commands.command(brief='Sets up the bot.')
-	@perms.mod()
+	@perms.mod()	
 	async def setup(self, ctx, archive_channel: discord.TextChannel, archive_emote: discord.Emoji, archive_emote_amount: int):
-		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
+		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is not None:
 			return
 
 		try:
-			dbc.save(str(ctx.message.guild.id), 'ignore_list', [])
+			dbc.save(str(ctx.message.guild.id), 'ignore_list', str(["hi"]))
 			dbc.save(str(ctx.message.guild.id), 'archive_channel', archive_channel.id)
 			dbc.save(str(ctx.message.guild.id), 'archive_emote', archive_emote.id)
 			dbc.save(str(ctx.message.guild.id), 'archive_emote_amount', archive_emote_amount)
-		except:
-			await self.bot.send("Failed to setup starboard.")
+		except Exception as E:
+			await ctx.send("Failed to setup starboard.")
+			print(E)
 			return
-		await self.bot.send("Succesfully setup starboard")
+		await ctx.send("Succesfully setup starboard")
 
 
 	@commands.command(brief='Set twitter bearer.')

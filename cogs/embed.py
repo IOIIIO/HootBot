@@ -5,7 +5,7 @@ import re
 from bs4 import BeautifulSoup
 import requests
 import cogs.support.reddit as redcog
-import cogs.support.perms as perms
+import cogs.support.perms as checks
 
 class Embed(commands.Cog, name="Image Embedding Commands"):
 	def __init__(self, bot):
@@ -16,7 +16,7 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 	    pass
 
 	@embed.group(brief='Toggle automatic Instagram embeds.')
-	@perms.mod()
+	@checks.mod()
 	async def instagram(self, ctx):
 		if dbc.ret(str(ctx.message.guild.id), "insta") == None or False:
 			b = True
@@ -27,7 +27,7 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 
 
 	@embed.command(brief='Toggle automatic Reddit embeds.')
-	@perms.mod()
+	@checks.mod()
 	async def reddit(self, ctx):
 		if dbc.ret(str(ctx.message.guild.id), "reddit") == None or False:
 			b = True
