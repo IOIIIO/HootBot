@@ -67,19 +67,15 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 					if 'dcinside.com' in url[0][0] and not msg.attachments:
 						await self.bot.get_channel(payload.channel_id).send('https://discordapp.com/channels/{}/{}/{} not supported, please attach the image that you want to archive to the link.'.format(msg.guild.id, msg.channel.id, msg.id))
 
-						cfg[str(msg.guild.id)]['ignore_list'].append(str(payload.channel_id)+str(payload.message_id))
-						json.dump(cfg, open('bot.json', 'w'), indent=4)
+						dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						return
 				if reaction.count >= dbc.ret(str(msg.guild.id), 'archive_emote_amount'):
 					if str(payload.channel_id)+str(payload.message_id) in self.exceptions:
 						await self.__buildEmbed(msg, self.exceptions[str(payload.channel_id)+str(payload.message_id)])
 
 						self.exceptions.remove(str(payload.channel_id)+str(payload.message_id))
-						json.dump(cfg, open('bot.json', 'w'), indent=4)
 					else:
-						cfg[str(msg.guild.id)]['ignore_list'].append(str(payload.channel_id)+str(payload.message_id))
-						json.dump(cfg, open('bot.json', 'w'), indent=4)
-
+						dbc.append([str(msg.guild.id), 'ignore_list'], str(payload.channel_id)+str(payload.message_id))
 						if url:
 							if msg.attachments:
 								await self.__buildEmbed(msg, msg.attachments[0].url)
@@ -152,8 +148,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[2] -> msg id
 		"""
 
-		cfg[ctx.guild.id]['ignore_list'].remove(str(msg_data[1])+str(msg_data[2]))
-		json.dump(cfg, open('bot.json', 'w'), indent=4)
+		dbc.remove(str(ctx.guild.id), 'ignore_list', str(msg_data[1])+str(msg_data[2]))
 
 	@commands.command(brief='Overrides the image that was going to the archived originally.')
 	@commands.has_permissions(administrator=True)
