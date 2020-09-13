@@ -13,3 +13,10 @@ def ret(sheet, name):
         return db[sheet].find_one(name=name)["value"]
     else:
         return None
+
+def append(sheet, name, value):
+    if b := ret(sheet, name) != None:
+        b.append(value)
+        save(sheet, name, b)
+    else:
+        save(sheet, name, value)
