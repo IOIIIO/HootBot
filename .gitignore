@@ -2,3 +2,4 @@ bot.json
 .vscode
 README.md
 __pycache__
+settings.db
