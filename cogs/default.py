@@ -11,7 +11,7 @@ class Default(commands.Cog, name="General Commands"):
 		return self.bot.is_owner(ctx.message.author)
 
 	@commands.command(brief='Sets the default presence.')
-	@commands.check(self.__owner)
+	@commands.check(__owner())
 	async def presence(self, ctx, *, b: str):
 		try:
 			dbc.save('bot', 'status', b)
@@ -22,7 +22,7 @@ class Default(commands.Cog, name="General Commands"):
 			print(e)
 
 	@commands.command(brief='Change the bot prefix.')
-	@commands.check(self.__owner)
+	@commands.check(__owner())
 	async def prefix(self, ctx, *, b: str):
 		try:
 			dbc.save('bot', 'prefix', b)

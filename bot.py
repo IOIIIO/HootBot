@@ -19,7 +19,7 @@ except Exception as e:
     exit()
 
 bot = commands.Bot(command_prefix=dbc.ret('bot', 'prefix'), description="HootBot, hooting your images to safety!")
-extensions = ['cogs.default']
+extensions = ['cogs.default', 'cogs.embed', 'cogs.schedule', 'cogs.starboard', 'cogs.updater']
 
 if __name__ == '__main__':
     for extension in extensions:

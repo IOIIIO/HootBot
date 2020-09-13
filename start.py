@@ -8,6 +8,7 @@ class Launch:
     def main(self):
         failT = False
         failO = False
+        failP = False
         self.resize(80,24)
         try:
             import dataset
