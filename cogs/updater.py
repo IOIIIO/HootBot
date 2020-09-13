@@ -1,16 +1,19 @@
 import discord
 from discord.ext import commands
 import cogs.support.db as dbc
-import sys, os
+import json, sys, os
 
 class Updater(commands.Cog, name="General Commands"):
 	def __init__(self, bot):
 		self.bot = bot
 
-@commands.group(brief='Updates the bot to the latest commit and restarts if necessary.')
-async def update(ctx):
-	if ctx.invoked_subcommand is None:
-		if await self.bot.is_owner(ctx.message.author):
+	def __owner(self, ctx):
+		return self.bot.is_owner(ctx.message.author)
+
+	@commands.group(brief='Updates the bot to the latest commit and restarts if necessary.')
+	@commands.check(self.__owner)
+	async def update(self, ctx):
+		if ctx.invoked_subcommand is None:
 			e = os.popen('git pull').read()
 			if "Already up to date." in e:
 				r = "Not restarting."
@@ -22,12 +25,12 @@ async def update(ctx):
 			embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
 			await ctx.send(embed=embed)
 			if c == 0x00ff00:
-				await bot.logout()
+				await self.bot.logout()
 				os.execl(sys.executable, sys.executable, * sys.argv)
 
-@update.group(brief='Updates the bot to the latest commit, updates requirements and restarts.')
-async def pip(ctx):
-	if await self.bot.is_owner(ctx.message.author):
+	@update.group(brief='Updates the bot to the latest commit, updates requirements and restarts.')
+	@commands.check(self.__owner)
+	async def pip(self, ctx):
 		e = os.popen('git pull').read()
 		if "Already up to date." in e:
 			r = "Not restarting."
@@ -44,12 +47,12 @@ async def pip(ctx):
 			embed.add_field(name="pip return:", value="{}".format(p), inline=False)
 		await ctx.send(embed=embed)
 		if c == 0x00ff00:
-			await bot.logout()
+			await self.bot.logout()
 			os.execl(sys.executable, sys.executable, * sys.argv)
 
-@update.group(brief='Updates the bot to the latest commit, stashing any local changes and restarts.')
-async def stash(ctx):
-	if await self.bot.is_owner(ctx.message.author):
+	@update.group(brief='Updates the bot to the latest commit, stashing any local changes and restarts.')
+	@commands.check(self.__owner)
+	async def stash(self, ctx):
 		e = os.popen('git pull').read()
 		if "Already up to date." in e:
 			r = "Not restarting."
@@ -67,7 +70,7 @@ async def stash(ctx):
 			embed.add_field(name="git stash return:", value="{}".format(p), inline=False)
 		await ctx.send(embed=embed)
 		if c == 0x00ff00:
-			await bot.logout()
+			await self.bot.logout()
 			os.execl(sys.executable, sys.executable, * sys.argv)
 
 def setup(bot):

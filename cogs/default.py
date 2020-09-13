@@ -7,27 +7,30 @@ class Default(commands.Cog, name="General Commands"):
 	def __init__(self, bot):
 		self.bot = bot
 
+	def __owner(self, ctx):
+		return self.bot.is_owner(ctx.message.author)
+
 	@commands.command(brief='Sets the default presence.')
+	@commands.check(self.__owner)
 	async def presence(self, ctx, *, b: str):
-		if await self.bot.is_owner(ctx.message.author):
-			try:
-				dbc.save('bot', 'status', b)
-				await self.bot.change_presence(activity=discord.Game(name=b))
-				await ctx.send("Sucessfully changed presence status.")
-			except Exception as e:
-				await ctx.send("Failed to change presence status.")
-				print(e)
+		try:
+			dbc.save('bot', 'status', b)
+			await self.bot.change_presence(activity=discord.Game(name=b))
+			await ctx.send("Sucessfully changed presence status.")
+		except Exception as e:
+			await ctx.send("Failed to change presence status.")
+			print(e)
 
 	@commands.command(brief='Change the bot prefix.')
+	@commands.check(self.__owner)
 	async def prefix(self, ctx, *, b: str):
-		if await self.bot.is_owner(ctx.message.author):
-			try:
-				dbc.save('bot', 'prefix', b)
-				self.bot.command_prefix = b
-				await ctx.send("Succesfully changed prefix to: \"{}\"".format(b))
-			except Exception as e:
-				await ctx.send("Failed to change prefix.")
-				print(e)
+		try:
+			dbc.save('bot', 'prefix', b)
+			self.bot.command_prefix = b
+			await ctx.send("Succesfully changed prefix to: \"{}\"".format(b))
+		except Exception as e:
+			await ctx.send("Failed to change prefix.")
+			print(e)
 
 	@commands.command(brief='Prints the specs of the machine we\'re running on. Linux/macOS hosts only.')
 	async def neofetch(self, ctx):
