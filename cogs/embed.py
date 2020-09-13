@@ -10,15 +10,12 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 	def __init__(self, bot):
 		self.bot = bot
 
-	def __owner(self, ctx):
-		return self.bot.is_owner(ctx.message.author)
-
 	@commands.group(brief="Allow bot to embed images which are normally broken")
 	async def embed(self, ctx):
 	    pass
 
 	@embed.group(brief='Toggle automatic Instagram embeds.')
-	@commands.has_permissions(administrator=True)
+	@commands.has_guild_permissions(manage_messages=True)
 	async def instagram(self, ctx):
 		if dbc.ret(str(ctx.message.guild.id), "insta") == None or False:
 			b = True
@@ -29,7 +26,7 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 
 
 	@embed.command(brief='Toggle automatic Reddit embeds.')
-	@commands.has_permissions(administrator=True)
+	@commands.has_guild_permissions(manage_messages=True)
 	async def reddit(self, ctx):
 		if dbc.ret(str(ctx.message.guild.id), "reddit") == None or False:
 			b = True
@@ -47,7 +44,7 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 			if dbc.ret(str(message.guild.id), "insta"):
 				await self.__redembed(message)
 
-		await self.bot.process_commands(message)
+		#await self.bot.process_commands(message)
 
 	async def __redembed(self, message):
 		url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', message.content)

@@ -12,7 +12,7 @@ import sys
 try:
     #botToken = dbc.db['bot'].find_one(name="token")["value"]
     botToken = dbc.ret('bot', "token")
-    print(botToken)
+    #print(botToken)
 except Exception as e:
     print("Failed to set token.")
     print("Reason: {}".format(e))

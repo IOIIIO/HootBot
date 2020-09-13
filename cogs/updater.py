@@ -11,7 +11,7 @@ class Updater(commands.Cog, name="General Commands"):
 		return self.bot.is_owner(ctx.message.author)
 
 	@commands.group(brief='Updates the bot to the latest commit and restarts if necessary.')
-	@commands.check(self.__owner)
+	@commands.is_owner()
 	async def update(self, ctx):
 		if ctx.invoked_subcommand is None:
 			e = os.popen('git pull').read()
@@ -29,7 +29,7 @@ class Updater(commands.Cog, name="General Commands"):
 				os.execl(sys.executable, sys.executable, * sys.argv)
 
 	@update.group(brief='Updates the bot to the latest commit, updates requirements and restarts.')
-	@commands.check(self.__owner)
+	@commands.is_owner()
 	async def pip(self, ctx):
 		e = os.popen('git pull').read()
 		if "Already up to date." in e:
@@ -51,7 +51,7 @@ class Updater(commands.Cog, name="General Commands"):
 			os.execl(sys.executable, sys.executable, * sys.argv)
 
 	@update.group(brief='Updates the bot to the latest commit, stashing any local changes and restarts.')
-	@commands.check(self.__owner)
+	@commands.is_owner()
 	async def stash(self, ctx):
 		e = os.popen('git pull').read()
 		if "Already up to date." in e:

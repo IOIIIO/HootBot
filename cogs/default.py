@@ -2,16 +2,14 @@ import discord
 from discord.ext import commands
 import cogs.support.db as dbc
 import sys, os
+from discord.ext.commands.cooldowns import BucketType
 
 class Default(commands.Cog, name="General Commands"):
 	def __init__(self, bot):
 		self.bot = bot
 
-	def __owner(self, ctx):
-		return self.bot.is_owner(ctx.message.author)
-
 	@commands.command(brief='Sets the default presence.')
-	@commands.check(__owner())
+	@commands.is_owner()
 	async def presence(self, ctx, *, b: str):
 		try:
 			dbc.save('bot', 'status', b)
@@ -22,7 +20,7 @@ class Default(commands.Cog, name="General Commands"):
 			print(e)
 
 	@commands.command(brief='Change the bot prefix.')
-	@commands.check(__owner())
+	@commands.is_owner()
 	async def prefix(self, ctx, *, b: str):
 		try:
 			dbc.save('bot', 'prefix', b)
@@ -46,6 +44,23 @@ class Default(commands.Cog, name="General Commands"):
 				await ctx.send("Installed, run the command again.")
 		else:
 			await ctx.send("Command not supported on this platform.")
+
+	@commands.command(brief='Add a moderator role specific to the current guild.')
+	@commands.cooldown(1, 60, BucketType.guild)
+	@commands.guild_only()
+	async def modrole(self, ctx, role: discord.Role = None):
+		if role != None:
+			try:
+				dbc.save(str(ctx.message.guild.id), 'mod_role', role.id)
+			except:
+				await ctx.send("Failed to change modrole.")
+			await ctx.send("Successfully changed modrole to {}".format(role.name))
+		else:
+			try:
+				dbc.save(str(ctx.message.guild.id), 'mod_role', None)
+			except:
+				await ctx.send("Failed to reset modrole")
+			await ctx.send("Successfully reste modrole")
 
 def setup(bot):
 	bot.add_cog(Default(bot))

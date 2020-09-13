@@ -13,9 +13,6 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		self.bot = bot
 		self.exceptions = []
 
-	def __owner(self, ctx):
-		return self.bot.is_owner(ctx.message.author)
-
 	# https://stackoverflow.com/a/45579374
 	def __get_id(self, url):
 		u_pars = urlparse(url)
@@ -135,7 +132,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 								await self.__buildEmbed(msg, '')
 	
 	@commands.command(brief='Removes the given message from the archive cache.')
-	@commands.has_permissions(administrator=True)
+	@commands.has_guild_permissions(manage_messages=True)
 	async def del_entry(self, ctx, msglink: str):
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
@@ -151,7 +148,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		dbc.remove(str(ctx.guild.id), 'ignore_list', str(msg_data[1])+str(msg_data[2]))
 
 	@commands.command(brief='Overrides the image that was going to the archived originally.')
-	@commands.has_permissions(administrator=True)
+	@commands.has_guild_permissions(manage_messages=True)
 	async def override(self, ctx, msglink: str, link: str):
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
@@ -168,7 +165,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			self.exceptions.append(msg_data[1] + msg_data[2])
 
 	@commands.command(help="Sets the amount of emotes required for a message to reach starboard.", brief='Change the emote amount requirement.')
-	@commands.has_permissions(administrator=True)
+	@commands.has_guild_permissions(manage_messages=True)
 	async def setamount(self, ctx, b: int):
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
@@ -181,7 +178,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		await ctx.send("Succesfully changed amount to {}".format(b))
 
 	@commands.command(brief='Sets up the bot.')
-	@commands.has_permissions(administrator=True)
+	@commands.has_guild_permissions(manage_messages=True)
 	async def setup(self, ctx, archive_channel: discord.TextChannel, archive_emote: discord.Emoji, archive_emote_amount: int):
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
 			return
@@ -198,7 +195,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 
 
 	@commands.command(brief='Set twitter bearer.')
-	@commands.check(self.__owner())
+	@commands.is_owner()
 	async def twitter(self, ctx, *, b: str):
 		dbc.ret('bot', 'twitter', b)
 		await ctx.send("Succesfully updated bearer key.")
