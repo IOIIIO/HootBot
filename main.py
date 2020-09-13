@@ -7,46 +7,6 @@ import urllib.request
 import datetime
 import time
 
-def sr():
-    start_reqs()
-
-def start_reqs():
-	print("")
-	print("Failed to find one more more requirements, would you like to automatically install them?")
-	print("(Requires pip3 to be installed on the system.)")
-	x = input("Y/n: ")
-	if str.lower(x) == "n":
-		print("Bot can't start without requirements, have a nice day!")
-		exit()
-	else:
-		os.system("pip3 install -r requirements.txt")
-
-def sc():
-	start_config()
-
-def start_config():
-	print("")
-	print("Failed to find config file, would you like to create one?")
-	x = input("Y/n: ")
-	if str.lower(x) == "n":
-		print("Boot can't start without config, have a nice day!")
-		exit()
-	else:
-		print("")
-		print("Bot Token:")
-		id = input("> ")
-		print("")
-		print("Bot Owner ID:")
-		id2 = input("> ")
-		print("")
-		print("prefix:")
-		id3 = input("> ")
-		temp = {"token" : id, "owner" : id2, "config": {"prefix" : id3}}
-		json.dump(temp, open('bot.json', 'w'), indent=4)
-		temp = 0
-		id2 = 0
-		id = 0
-
 try:
 	import discord
 	from discord.ext import commands
