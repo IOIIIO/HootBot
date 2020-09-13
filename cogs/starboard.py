@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlparse, quote_plus
 import cogs.support.db as dbc
 import cogs.support.perms as perms
 class Starboard(commands.Cog, name="Starboard Commands"):
+	"""Commands related to controlling the starboard."""
 	def __init__(self, bot):
 		self.bot = bot
 		self.exceptions = []
@@ -131,9 +132,10 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 							else:
 								await self.__buildEmbed(msg, '')
 	
-	@commands.command(brief='Removes the given message from the archive cache.')
+	@commands.command()
 	@perms.mod()
 	async def del_entry(self, ctx, msglink: str):
+		"""Removes the given message from the archive cache."""
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 			return
@@ -151,9 +153,10 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			return
 		ctx.send("Removed.")
 
-	@commands.command(brief='Overrides the image that was going to the archived originally.')
+	@commands.command()
 	@perms.mod()
 	async def override(self, ctx, msglink: str, link: str):
+		"""Overrides the image that was going to the archived originally."""
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 			return
@@ -168,9 +171,10 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		if msg_data[1] + msg_data[2] not in self.exceptions:
 			self.exceptions.append(msg_data[1] + msg_data[2])
 
-	@commands.command(help="Sets the amount of emotes required for a message to reach starboard.", brief='Change the emote amount requirement.')
+	@commands.command()
 	@perms.mod()
 	async def setamount(self, ctx, b: int):
+		"""Sets the amount of emotes required for a message to reach starboard."""
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
@@ -181,9 +185,10 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 				return
 		await ctx.send("Succesfully changed amount to {}".format(b))
 
-	@commands.command(brief='Sets up the bot.')
+	@commands.command()
 	@perms.mod()	
 	async def setup(self, ctx, archive_channel: discord.TextChannel, archive_emote: discord.Emoji, archive_emote_amount: int):
+		"""Sets up the starboard channel, emote and amount."""
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is not None:
 			return
 
@@ -197,14 +202,6 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			print(E)
 			return
 		await ctx.send("Succesfully setup starboard")
-
-
-	@commands.command(brief='Set twitter bearer.')
-	@commands.is_owner()
-	async def twitter(self, ctx, *, b: str):
-		dbc.ret('bot', 'twitter', b)
-		await ctx.send("Succesfully updated bearer key.")
-		b = 0
 
 
 def setup(bot):

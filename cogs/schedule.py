@@ -4,6 +4,7 @@ import time, datetime, json
 import urllib.request
 
 class Schedule(commands.Cog, name="Show Schedule Commands"):
+	"""Commands that show any show's next episode's schedule."""
 	def __init__(self, bot):
 		self.bot = bot
 	async def showID(self, id):
@@ -23,8 +24,9 @@ class Schedule(commands.Cog, name="Show Schedule Commands"):
 				else:
 					return(a, d, 1, firstAPI)
 
-	@commands.command(brief='Show when the next episode of the show will air.')
+	@commands.command()
 	async def schedule(self, ctx, *, id:str=None):
+		"""Shows when the next episode of the show will air. Defaults to The Owl House."""
 		tic = time.perf_counter()
 		await ctx.channel.trigger_typing()
 		try:

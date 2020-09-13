@@ -8,16 +8,19 @@ import cogs.support.reddit as redcog
 import cogs.support.perms as checks
 
 class Embed(commands.Cog, name="Image Embedding Commands"):
+	"""Comands for controlling the embedding of images that Discord normally doesn't."""
 	def __init__(self, bot):
 		self.bot = bot
 
-	@commands.group(brief="Allow bot to embed images which are normally broken")
+	@commands.group()
 	async def embed(self, ctx):
+		"""Generic container for embed commands. run <p>help embed for more info."""
 	    pass
 
-	@embed.group(brief='Toggle automatic Instagram embeds.')
+	@embed.group()
 	@checks.mod()
 	async def instagram(self, ctx):
+		"""Toggles whether Instagram images should be embedded"""
 		if dbc.ret(str(ctx.message.guild.id), "insta") == None or False:
 			b = True
 		else:
@@ -26,9 +29,10 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 		await ctx.send("Succesfully changed Instagram embed state to: \"{}\"".format(b))
 
 
-	@embed.command(brief='Toggle automatic Reddit embeds.')
+	@embed.command()
 	@checks.mod()
 	async def reddit(self, ctx):
+		"""Toggles whether Reddit images should be embedded."""
 		if dbc.ret(str(ctx.message.guild.id), "reddit") == None or False:
 			b = True
 		else:

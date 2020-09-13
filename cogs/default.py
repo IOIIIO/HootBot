@@ -6,19 +6,22 @@ from discord.ext.commands.cooldowns import BucketType
 import cogs.support.perms as perms
 
 class Default(commands.Cog, name="General Commands"):
+	"""Generic commands to control the bot."""
 	def __init__(self, bot):
 		self.bot = bot
 
 	@commands.command()
 	@perms.mod()
 	async def say(self, ctx, *, repl: str):
+		"""Repeats what you said, stripping out mentions."""
 		length = len(ctx.command.qualified_name) + len(self.bot.command_prefix)
 		message = ctx.message.clean_content[length:]
 		await ctx.send(message)
 
-	@commands.command(brief='Sets the default presence.')
+	@commands.command()
 	@commands.is_owner()
 	async def presence(self, ctx, *, b: str):
+		"""Adjusts the bot's presence status."""
 		try:
 			dbc.save('bot', 'status', b)
 			await self.bot.change_presence(activity=discord.Game(name=b))
@@ -27,9 +30,10 @@ class Default(commands.Cog, name="General Commands"):
 			await ctx.send("Failed to change presence status.")
 			print(e)
 
-	@commands.command(brief='Change the bot prefix.')
+	@commands.command()
 	@commands.is_owner()
 	async def prefix(self, ctx, *, b: str):
+		"""Adjusts the bot's global prefix."""
 		try:
 			dbc.save('bot', 'prefix', b)
 			self.bot.command_prefix = b
@@ -38,8 +42,9 @@ class Default(commands.Cog, name="General Commands"):
 			await ctx.send("Failed to change prefix.")
 			print(e)
 
-	@commands.command(brief='Prints the specs of the machine we\'re running on. Linux/macOS hosts only.')
+	@commands.command()
 	async def neofetch(self, ctx):
+		"""Prints the specs of the machine we\'re running on. Linux/macOS hosts only."""
 		if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
 			if os.path.isfile("nf/neofetch"):
 				e = os.popen('nf/neofetch --stdout').read().split("\n",2)[2]
@@ -53,10 +58,11 @@ class Default(commands.Cog, name="General Commands"):
 		else:
 			await ctx.send("Command not supported on this platform.")
 
-	@commands.command(brief='Add a moderator role specific to the current guild.')
+	@commands.command()
 	@commands.cooldown(1, 60, BucketType.guild)
 	@commands.guild_only()
 	async def modrole(self, ctx, role: discord.Role = None):
+		"""Adds a guild-specific role that overrides moderator permissions check."""
 		if role != None:
 			try:
 				dbc.save(str(ctx.message.guild.id), 'mod_role', role.id)
@@ -69,6 +75,14 @@ class Default(commands.Cog, name="General Commands"):
 			except:
 				await ctx.send("Failed to reset modrole")
 			await ctx.send("Successfully reste modrole")
+
+	@commands.command()
+	@commands.is_owner()
+	async def twitter(self, ctx, *, b: str):
+		"""Sets Twitter bearer key for embedding Tweets."""
+		dbc.save('bot', 'twitter', b)
+		await ctx.send("Succesfully updated bearer key.")
+		b = 0
 
 def setup(bot):
 	bot.add_cog(Default(bot))
