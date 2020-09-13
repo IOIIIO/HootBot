@@ -1,3 +1,6 @@
+# Made by red-green (https://github.com/red-green/)
+# Copied with permission from https://github.com/red-green/CorpBot.py/blob/patch-1/Cogs/JazUtils.py
+
 import asyncio
 import discord
 import random
