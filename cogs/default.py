@@ -16,6 +16,10 @@ class Default(commands.Cog, name="General Commands"):
 		"""Repeats what you said, stripping out mentions."""
 		length = len(ctx.command.qualified_name) + len(self.bot.command_prefix)
 		message = ctx.message.clean_content[length:]
+		try:
+			await ctx.message.delete()
+		except:
+			pass
 		await ctx.send(message)
 
 	@commands.command()
