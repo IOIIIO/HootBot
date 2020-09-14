@@ -8,27 +8,21 @@ import datetime
 import colorsys
 from   discord.ext import commands
 
-
-
 # constant for paginating embeds
 EMBED_MAX_LEN = 2048
 MAX_USERS = 30 # max people to list for !whohas
 STATUSMAP1 = {discord.Status.online:'1',discord.Status.dnd:'2',discord.Status.idle:'3'} ##for sorting
 STATUSMAP2 = {discord.Status.online:':green_circle:',discord.Status.dnd:':no_entry_sign:',discord.Status.idle:':crescent_moon:',discord.Status.offline:':black_circle:'}
 
-
-def setup(bot):
-	# Add the bot
-	bot.add_cog(JazUtils(bot))
-
 class JazUtils(commands.Cog):
+	"""Various useful commands related to checking users and roles."""
 	# Init with the bot reference, and a reference to the settings var
 	def __init__(self, bot):
 		self.bot = bot
 
 	@commands.command(pass_context=True)
 	async def snowflake(self, ctx, *, sid : str = None):
-		"""show the date a snowflake ID was created"""
+		"""Show the date a snowflake ID was created"""
 
 		sid = int(sid)
 		timestamp = ((sid >> 22) + 1420070400000) / 1000 # python uses seconds not milliseconds
@@ -39,7 +33,8 @@ class JazUtils(commands.Cog):
 
 	@commands.command(pass_context=True)
 	async def fullsnowflake(self, ctx, *, sid : str = None):
-		"""show all available data about a snowflake ID"""
+		"""Show all available data about a snowflake ID"""
+		c = False
 		sid = int(sid)
 		timestamp = ((sid >> 22) + 1420070400000) / 1000 # python uses seconds not milliseconds
 		iwid = (sid & 0x3E0000) >> 17
@@ -53,12 +48,27 @@ class JazUtils(commands.Cog):
 		embed.add_field(name="Date created", value=fdate)
 		embed.add_field(name="Internal worker/process", value="{}/{}".format(iwid,ipid))
 		embed.add_field(name="Internal counter", value=icount)
-		embed.add_field(name="As user ping", value="<@{}>".format(sid))
-		embed.add_field(name="As channel ping", value="<#{}>".format(sid))
-		embed.add_field(name="As role ping", value="<@&{}>".format(sid))
-		embed.add_field(name="As custom emote", value="<:test:{}>".format(sid))
-		embed.add_field(name="As animated emote", value="<a:test:{}>".format(sid))
-
+		if self.bot.get_user(sid) != None:
+			c = True
+			embed.add_field(name="As user tag", value=self.bot.get_user(sid).mention)
+		if self.bot.get_channel(sid) != None:
+			c = True
+			b = self.bot.get_channel(sid)
+			embed.add_field(name="As channel tag", value=b.mention)
+			if b.category != None:
+				embed.add_field(name="In category:", value=b.category)
+		if self.bot.get_guild(sid) != None:
+			c = True
+			embed.add_field(name="As guild name", value=self.bot.get_guild(sid).name)
+		if self.bot.get_emoji(sid) != None:
+			c = True
+			b = self.bot.get_emoji(sid)
+			embed.add_field(name="As emoji", value="{} [Link]({})".format(b, b.url))
+		if ctx.message.guild.get_role(sid) != None:
+			c = True
+			embed.add_field(name="As role tag", value=ctx.message.guild.get_role(sid).mention)
+		if c == False:
+			embed.add_field(name= "Failed to find snowflake", value="Missing permissions, or snowflake doesn't exist.")
 		await ctx.channel.send(embed=embed)
 
 
@@ -236,3 +246,7 @@ class JazUtils(commands.Cog):
 			await ctx.channel.send('Seems there are no empty roles...')
 
 		await self.rolelist_paginate(ctx, sorted_list, title='Empty Roles')
+
+def setup(bot):
+	# Add the bot
+	bot.add_cog(JazUtils(bot))
