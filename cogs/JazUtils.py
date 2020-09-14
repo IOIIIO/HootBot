@@ -1,5 +1,6 @@
 # Made by red-green (https://github.com/red-green/)
 # Copied with permission from https://github.com/red-green/CorpBot.py/blob/patch-1/Cogs/JazUtils.py
+# Modified by IOIIIO (https://github.com/IOIIO)
 
 import asyncio
 import discord
