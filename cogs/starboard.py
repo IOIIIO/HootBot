@@ -173,6 +173,17 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 
 	@commands.command()
 	@perms.mod()
+	async def setchannelamount(self, ctx, amount:int, channel: discord.TextChannel = None):
+		"""Change the amount of emotes needed for a specific channel. If no channel is passed, it adjusts for the current channel."""
+		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
+			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
+		else:
+			if channel == None:
+				channel = ctx.message.channel
+			dbc.savem(str(ctx.message.guild.id), overrides_id=str(channel.id), overrides_amount=str(amount))
+
+	@commands.command()
+	@perms.mod()
 	async def setamount(self, ctx, b: int):
 		"""Sets the amount of emotes required for a message to reach starboard."""
 		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:

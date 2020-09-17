@@ -11,9 +11,21 @@ def save(sheet, name, value):
 	else:
 		db[sheet].update(dict(name=name, value=value), ['name'])
 
+def savem(sheet, **kwargs):
+	if db[sheet].find_one(next(iter(kwargs.values()))) is None:
+		db[sheet].insert(kwargs)
+	else:
+		db[sheet].update(kwargs, next(iter(kwargs)))
+
 def ret(sheet, name):
 	if db[sheet].find_one(name=name) != None:
 		return db[sheet].find_one(name=name)["value"]
+	else:
+		return None
+
+def retm(sheet, **kwargs):
+	if db[sheet].find_one(next(iter(kwargs))=next(iter(kwargs.values()))) != None:
+		return db[sheet].find_one(next(iter(kwargs))=next(iter(kwargs.values())))
 	else:
 		return None
 
