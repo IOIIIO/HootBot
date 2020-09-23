@@ -8,11 +8,15 @@ import requests
 from urllib.parse import parse_qs, urlparse, quote_plus
 import cogs.support.db as dbc
 import cogs.support.perms as perms
+import ast
 class Starboard(commands.Cog, name="Starboard Commands"):
 	"""Commands related to controlling the starboard."""
 	def __init__(self, bot):
 		self.bot = bot
 		self.exceptions = []
+		self.s = dbc.db["servers"]
+		self.o = dbc.db["overrides"]
+		self.r = self.s.find_one(server_id=msg.guild.id)
 
 	# https://stackoverflow.com/a/45579374
 	def __get_id(self, url):
@@ -51,29 +55,56 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 
 		await self.bot.get_channel(int(dbc.ret(str(msg.guild.id), 'archive_channel'))).send(embed=embed)
 
+	def arrs(self, value, msg, type=True, type2=True):
+		#if ast.literal_eval(self.r["ignore_list"]) != None:
+		b = ast.literal_eval(self.r["ignore_list"])
+		try:
+			if type == True:
+				b.append(value)
+			elif type == False:
+				b.remove(value)
+		except:
+			return None
+		value = str(b)
+		if type2 == True:
+			c = msg.channel.id
+		elif type2 == false:
+			c = msg
+		self.s.update(dict(ignore_list=value), [msg.channel.id])
+		#else:
+		#	save(sheet, name, value)
+
 	@commands.Cog.listener()
 	async def on_raw_reaction_add(self, payload):
 		msg = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
-		if str(payload.channel_id)+str(payload.message_id) in dbc.retar(str(msg.guild.id), 'ignore_list'):
+		if str(payload.channel_id)+str(payload.message_id) in ast.literal_eval(self.r["ignore_list"]):
 			return
 
 		for reaction in msg.reactions:
-			if reaction.emoji.id == int(dbc.ret(str(msg.guild.id), 'archive_emote')):
+			if reaction.emoji.id == int(self.r['archive_emote']):
+				state = False
 				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', msg.content)
 				if url:
 					if 'dcinside.com' in url[0][0] and not msg.attachments:
 						await self.bot.get_channel(payload.channel_id).send('https://discordapp.com/channels/{}/{}/{} not supported, please attach the image that you want to archive to the link.'.format(msg.guild.id, msg.channel.id, msg.id))
 
-						dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
+						self.arrs(str(payload.channel_id)+str(payload.message_id), payload)
+						#dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						return
-				if reaction.count >= int(dbc.ret(str(msg.guild.id), 'archive_emote_amount')):
+				if self.o.find_one(channel_id=msg.channel.id) != None:
+					if reaction.count >= int(self.o.find_one(channel_id=payload.channel.id)["channel_am"]):
+						state = True
+				elif reaction.count >= int(self.r['archive_emote_amount']):
+					state = True
+				if state == True:
 					if str(payload.channel_id)+str(payload.message_id) in self.exceptions:
 						await self.__buildEmbed(msg, self.exceptions[str(payload.channel_id)+str(payload.message_id)])
 
 						self.exceptions.remove(str(payload.channel_id)+str(payload.message_id))
 					else:
-						dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
+						self.arrs(str(payload.channel_id)+str(payload.message_id), payload)
+						#dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						if url:
 							if msg.attachments:
 								await self.__buildEmbed(msg, msg.attachments[0].url)
@@ -136,7 +167,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()
 	async def del_entry(self, ctx, msglink: str):
 		"""Removes the given message from the archive cache."""
-		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
+		if self.r['archive_channel'] is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 			return
 
@@ -147,7 +178,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[2] -> msg id
 		"""
 		try:
-			dbc.remove(str(ctx.guild.id), 'ignore_list', str(msg_data[1])+str(msg_data[2]))
+			self.arrs(str(msg_data[1])+str(msg_data[2]), msg_data[1], False, False)
 		except:
 			ctx.send("Failed to remove from database")
 			return
@@ -168,25 +199,29 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[2] -> msg id
 		"""
 
-		if msg_data[1] + msg_data[2] not in self.exceptions:
+		if self.r['archive_channel'] is None:
 			self.exceptions.append(msg_data[1] + msg_data[2])
 
 	@commands.command()
 	@perms.mod()
 	async def setchannelamount(self, ctx, amount:int, channel: discord.TextChannel = None):
 		"""Change the amount of emotes needed for a specific channel. If no channel is passed, it adjusts for the current channel."""
-		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
+		if self.r['archive_channel'] is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
 			if channel == None:
 				channel = ctx.message.channel
-			dbc.savem(str(ctx.message.guild.id), overrides_id=str(channel.id), overrides_amount=str(amount))
+			if self.o.find_one(channel_id=channel.id):
+				self.o.update(dict(channel_am=amount), [channel.id])
+			else:
+				self.o.insert(dict(channel_id-channel.id, channel_am=amount)
+			#dbc.savem(str(ctx.message.guild.id), overrides_id=str(channel.id), overrides_amount=str(amount))
 
 	@commands.command()
 	@perms.mod()
 	async def setamount(self, ctx, b: int):
 		"""Sets the amount of emotes required for a message to reach starboard."""
-		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
+		if self.r['archive_channel'] is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
 			try:
