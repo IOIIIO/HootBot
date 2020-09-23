@@ -11,11 +11,12 @@ def save(sheet, name, value):
 	else:
 		db[sheet].update(dict(name=name, value=value), ['name'])
 
-def savem(sheet, **kwargs):
-	if db[sheet].find_one(next(iter(kwargs.values()))) is None:
-		db[sheet].insert(kwargs)
-	else:
-		db[sheet].update(kwargs, next(iter(kwargs)))
+#def savem(sheet, **kwargs):
+#	with list(kwargs.keys())[0] as key:
+#		if db[sheet].find_one(**{key: kwargs[key]}):
+#			db[sheet].insert(kwargs)
+#		else:
+#			db[sheet].update(kwargs, next(iter(kwargs)))
 
 def ret(sheet, name):
 	if db[sheet].find_one(name=name) != None:
@@ -23,11 +24,11 @@ def ret(sheet, name):
 	else:
 		return None
 
-def retm(sheet, **kwargs):
-	if db[sheet].find_one(next(iter(kwargs))=next(iter(kwargs.values()))) != None:
-		return db[sheet].find_one(next(iter(kwargs))=next(iter(kwargs.values())))
-	else:
-		return None
+#def retm(sheet, column, name):
+#	if db[sheet].find_one(**{column: name}) != None:
+#		return db[sheet].find_one(**{column: name})
+#	else:
+#		return None
 
 def retar(sheet, name):
 	if ret(sheet, name) != None:
