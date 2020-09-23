@@ -188,7 +188,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()
 	async def override(self, ctx, msglink: str, link: str):
 		"""Overrides the image that was going to the archived originally."""
-		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is None:
+		if self.r['archive_channel'] is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 			return
 
@@ -225,7 +225,8 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
 			try:
-				dbc.save(str(ctx.guild.id), 'archive_emote_amount', b)
+				self.s.update(dict(archive_emote_amount=b), [ctx.guild.id])
+				#dbc.save(str(ctx.guild.id), 'archive_emote_amount', b)
 			except:
 				await ctx.send("Failed to change amount.")
 				return
@@ -235,14 +236,15 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()	
 	async def setup(self, ctx, archive_channel: discord.TextChannel, archive_emote: discord.Emoji, archive_emote_amount: int):
 		"""Sets up the starboard channel, emote and amount."""
-		if dbc.ret(str(ctx.message.guild.id), 'archive_channel') is not None:
+		if self.r['archive_channel'] is not None:
 			return
 
 		try:
-			dbc.save(str(ctx.message.guild.id), 'ignore_list', str(["hi"]))
-			dbc.save(str(ctx.message.guild.id), 'archive_channel', archive_channel.id)
-			dbc.save(str(ctx.message.guild.id), 'archive_emote', archive_emote.id)
-			dbc.save(str(ctx.message.guild.id), 'archive_emote_amount', archive_emote_amount)
+			self.s.insert(dict(ignore_list=str(["hi"]), archive_channel=archive_channel.id, archive_emote=archive_emote.id, archive_emote_amount=archive_emote_amount))
+			#dbc.save(str(ctx.message.guild.id), 'ignore_list', str(["hi"]))
+			#dbc.save(str(ctx.message.guild.id), 'archive_channel', archive_channel.id)
+			#dbc.save(str(ctx.message.guild.id), 'archive_emote', archive_emote.id)
+			#dbc.save(str(ctx.message.guild.id), 'archive_emote_amount', archive_emote_amount)
 		except Exception as E:
 			await ctx.send("Failed to setup starboard.")
 			print(E)
