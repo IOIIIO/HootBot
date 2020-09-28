@@ -1,7 +1,7 @@
 import dataset
 import ast
 
-db = dataset.connect('sqlite:///settings.db')
+db = dataset.connect('sqlite:///settingstest.db')
 
 def save(sheet, name, value):
 	if type(value) == list:

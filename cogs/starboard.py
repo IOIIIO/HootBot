@@ -16,7 +16,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		self.exceptions = []
 		self.s = dbc.db["servers"]
 		self.o = dbc.db["overrides"]
-		self.r = self.s.find_one(server_id=msg.guild.id)
+		#self.r = self.s.find_one(server_id=msg.guild.id)
 
 	# https://stackoverflow.com/a/45579374
 	def __get_id(self, url):
@@ -53,11 +53,11 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		embed.add_field(name='Channel', value=msg.channel.mention, inline=True)
 		embed.set_image(url=url)
 
-		await self.bot.get_channel(int(dbc.ret(str(msg.guild.id), 'archive_channel'))).send(embed=embed)
+		await self.bot.get_channel(int(self.s.find_one(server_id=msg.guild.id)['archive_channel'])).send(embed=embed)
 
 	def arrs(self, value, msg, type=True, type2=True):
-		#if ast.literal_eval(self.r["ignore_list"]) != None:
-		b = ast.literal_eval(self.r["ignore_list"])
+		#if ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"]) != None:
+		b = ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"])
 		try:
 			if type == True:
 				b.append(value)
@@ -70,7 +70,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			c = msg.channel.id
 		elif type2 == false:
 			c = msg
-		self.s.update(dict(ignore_list=value), [msg.channel.id])
+		self.s.update(dict(ignore_list=value, server_id=msg.channel.id), ['server_id'])
 		#else:
 		#	save(sheet, name, value)
 
@@ -78,24 +78,24 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	async def on_raw_reaction_add(self, payload):
 		msg = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
-		if str(payload.channel_id)+str(payload.message_id) in ast.literal_eval(self.r["ignore_list"]):
+		if str(payload.channel_id)+str(payload.message_id) in ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"]):
 			return
 
 		for reaction in msg.reactions:
-			if reaction.emoji.id == int(self.r['archive_emote']):
+			if reaction.emoji.id == int(self.s.find_one(server_id=msg.guild.id)['archive_emote']):
 				state = False
 				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', msg.content)
 				if url:
 					if 'dcinside.com' in url[0][0] and not msg.attachments:
 						await self.bot.get_channel(payload.channel_id).send('https://discordapp.com/channels/{}/{}/{} not supported, please attach the image that you want to archive to the link.'.format(msg.guild.id, msg.channel.id, msg.id))
 
-						self.arrs(str(payload.channel_id)+str(payload.message_id), payload)
+						self.arrs(str(payload.channel_id)+str(payload.message_id), msg)
 						#dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						return
 				if self.o.find_one(channel_id=msg.channel.id) != None:
 					if reaction.count >= int(self.o.find_one(channel_id=payload.channel.id)["channel_am"]):
 						state = True
-				elif reaction.count >= int(self.r['archive_emote_amount']):
+				elif reaction.count >= int(self.s.find_one(server_id=msg.guild.id)['archive_emote_amount']):
 					state = True
 				if state == True:
 					if str(payload.channel_id)+str(payload.message_id) in self.exceptions:
@@ -103,7 +103,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 
 						self.exceptions.remove(str(payload.channel_id)+str(payload.message_id))
 					else:
-						self.arrs(str(payload.channel_id)+str(payload.message_id), payload)
+						self.arrs(str(payload.channel_id)+str(payload.message_id), msg)
 						#dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						if url:
 							if msg.attachments:
@@ -167,7 +167,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()
 	async def del_entry(self, ctx, msglink: str):
 		"""Removes the given message from the archive cache."""
-		if self.r['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 			return
 
@@ -188,7 +188,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()
 	async def override(self, ctx, msglink: str, link: str):
 		"""Overrides the image that was going to the archived originally."""
-		if self.r['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 			return
 
@@ -199,14 +199,14 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[2] -> msg id
 		"""
 
-		if self.r['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
 			self.exceptions.append(msg_data[1] + msg_data[2])
 
 	@commands.command()
 	@perms.mod()
 	async def setchannelamount(self, ctx, amount:int, channel: discord.TextChannel = None):
 		"""Change the amount of emotes needed for a specific channel. If no channel is passed, it adjusts for the current channel."""
-		if self.r['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
 			if channel == None:
@@ -214,18 +214,18 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			if self.o.find_one(channel_id=channel.id):
 				self.o.update(dict(channel_am=amount), [channel.id])
 			else:
-				self.o.insert(dict(channel_id-channel.id, channel_am=amount)
+				self.o.insert(dict(channel_id-channel.id, channel_am=amount))
 			#dbc.savem(str(ctx.message.guild.id), overrides_id=str(channel.id), overrides_amount=str(amount))
 
 	@commands.command()
 	@perms.mod()
 	async def setamount(self, ctx, b: int):
 		"""Sets the amount of emotes required for a message to reach starboard."""
-		if self.r['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
 			try:
-				self.s.update(dict(archive_emote_amount=b), [ctx.guild.id])
+				self.s.update(dict(archive_emote_amount=b, server_id=ctx.message.channel.id), ['server_id'])
 				#dbc.save(str(ctx.guild.id), 'archive_emote_amount', b)
 			except:
 				await ctx.send("Failed to change amount.")
@@ -236,11 +236,11 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()	
 	async def setup(self, ctx, archive_channel: discord.TextChannel, archive_emote: discord.Emoji, archive_emote_amount: int):
 		"""Sets up the starboard channel, emote and amount."""
-		if self.r['archive_channel'] is not None:
+		if self.s.find_one(server_id=ctx.message.guild.id) is not None:
 			return
 
 		try:
-			self.s.insert(dict(ignore_list=str(["hi"]), archive_channel=archive_channel.id, archive_emote=archive_emote.id, archive_emote_amount=archive_emote_amount))
+			self.s.insert(dict(ignore_list=str(["hi"]), archive_channel=archive_channel.id, archive_emote=archive_emote.id, archive_emote_amount=archive_emote_amount, server_id=ctx.message.guild.id))
 			#dbc.save(str(ctx.message.guild.id), 'ignore_list', str(["hi"]))
 			#dbc.save(str(ctx.message.guild.id), 'archive_channel', archive_channel.id)
 			#dbc.save(str(ctx.message.guild.id), 'archive_emote', archive_emote.id)
@@ -250,6 +250,20 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			print(E)
 			return
 		await ctx.send("Succesfully setup starboard")
+
+	@commands.command()	
+	@commands.is_owner()
+	async def firstrun(self, ctx):
+		"""Prepares the database for use with the starboard."""
+		if self.s.find_one(server_id=ctx.message.guild.id) is not None:	
+			return
+		try:
+			dbc.db.query('CREATE TABLE overrides (channel_id,channel_am);')
+			dbc.db.query('CREATE TABLE servers (ignore_list,archive_channel,archive_emote,archive_emote_amount,server_id);')
+			await ctx.send("Successfully created tables.")
+		except:
+			await ctx.send("Failed. Perhaps tables already exist?")
+			return
 
 
 def setup(bot):
