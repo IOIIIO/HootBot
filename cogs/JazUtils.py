@@ -15,7 +15,7 @@ MAX_USERS = 30 # max people to list for !whohas
 STATUSMAP1 = {discord.Status.online:'1',discord.Status.dnd:'2',discord.Status.idle:'3'} ##for sorting
 STATUSMAP2 = {discord.Status.online:':green_circle:',discord.Status.dnd:':no_entry_sign:',discord.Status.idle:':crescent_moon:',discord.Status.offline:':black_circle:'}
 
-class JazUtils(commands.Cog):
+class jazutils(commands.Cog, name="General Utility Commands"):
 	"""Various useful commands related to checking users and roles."""
 	# Init with the bot reference, and a reference to the settings var
 	def __init__(self, bot):
@@ -250,4 +250,4 @@ class JazUtils(commands.Cog):
 
 def setup(bot):
 	# Add the bot
-	bot.add_cog(JazUtils(bot))
+	bot.add_cog(jazutils(bot))
