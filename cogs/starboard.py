@@ -57,7 +57,12 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 
 	def arrs(self, value, msg, type=True, type2=True):
 		#if ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"]) != None:
-		b = ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"])
+		if type2 == True:
+			c = msg.guild.id
+		elif type2 == False:
+			c = int(msg)
+		#print(self.s.find_one(server_id=c))
+		b = ast.literal_eval(self.s.find_one(server_id=c)["ignore_list"])
 		try:
 			if type == True:
 				b.append(value)
@@ -65,12 +70,9 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 				b.remove(value)
 		except:
 			return None
-		value = str(b)
-		if type2 == True:
-			c = msg.channel.id
-		elif type2 == false:
-			c = msg
-		self.s.update(dict(ignore_list=value, server_id=msg.channel.id), ['server_id'])
+		d = str(b)
+		#print(d)
+		self.s.update(dict(ignore_list=d, server_id=c), ['server_id'])
 		#else:
 		#	save(sheet, name, value)
 
@@ -78,11 +80,12 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	async def on_raw_reaction_add(self, payload):
 		msg = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
-		if str(payload.channel_id)+str(payload.message_id) in ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"]):
-			return
-
 		for reaction in msg.reactions:
-			if reaction.emoji.id == int(self.s.find_one(server_id=msg.guild.id)['archive_emote']):
+			if type(reaction.emoji) != str and reaction.emoji.id == int(self.s.find_one(server_id=msg.guild.id)['archive_emote']):
+				if str(payload.channel_id)+str(payload.message_id) in ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"]):
+					#print(self.s.find_one(server_id=msg.guild.id))
+					#print(self.s.find_one(server_id=msg.guild.id)["ignore_list"])
+					return
 				state = False
 				url = re.findall(r'((https?):((//)|(\\\\))+([\w\d:#@%/;$()~_?\+-=\\\.&](#!)?)*)', msg.content)
 				if url:
@@ -93,7 +96,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 						#dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						return
 				if self.o.find_one(channel_id=msg.channel.id) != None:
-					if reaction.count >= int(self.o.find_one(channel_id=payload.channel.id)["channel_am"]):
+					if reaction.count >= int(self.o.find_one(channel_id=msg.channel.id)["channel_am"]):
 						state = True
 				elif reaction.count >= int(self.s.find_one(server_id=msg.guild.id)['archive_emote_amount']):
 					state = True
@@ -178,11 +181,11 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[2] -> msg id
 		"""
 		try:
-			self.arrs(str(msg_data[1])+str(msg_data[2]), msg_data[1], False, False)
+			self.arrs(str(msg_data[1])+str(msg_data[2]), msg_data[0], False, False)
 		except:
-			ctx.send("Failed to remove from database")
+			await ctx.send("Failed to remove from database")
 			return
-		ctx.send("Removed.")
+		await ctx.send("Removed.")
 
 	@commands.command()
 	@perms.mod()
@@ -199,7 +202,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[2] -> msg id
 		"""
 
-		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is not None:
 			self.exceptions.append(msg_data[1] + msg_data[2])
 
 	@commands.command()
@@ -214,7 +217,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			if self.o.find_one(channel_id=channel.id):
 				self.o.update(dict(channel_am=amount), [channel.id])
 			else:
-				self.o.insert(dict(channel_id-channel.id, channel_am=amount))
+				self.o.insert(dict(channel_id=channel.id, channel_am=amount))
 			#dbc.savem(str(ctx.message.guild.id), overrides_id=str(channel.id), overrides_amount=str(amount))
 
 	@commands.command()
@@ -225,7 +228,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
 			try:
-				self.s.update(dict(archive_emote_amount=b, server_id=ctx.message.channel.id), ['server_id'])
+				self.s.update(dict(archive_emote_amount=b, server_id=ctx.message.guild.id), ['server_id'])
 				#dbc.save(str(ctx.guild.id), 'archive_emote_amount', b)
 			except:
 				await ctx.send("Failed to change amount.")
