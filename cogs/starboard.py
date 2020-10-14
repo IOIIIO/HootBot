@@ -123,7 +123,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 									"""
 									either archive the image in the tweet if there is one or archive the text
 									"""
-									res = json.loads(requests.get('https://api.twitter.com/1.1/statuses/lookup.json?id={}&tweet_mode=extended'.format(re.findall(r'.*?twitter\.com\/.*?\/status\/(\d*).*?', url[0][0])[0]), headers={"Authorization": "Bearer {}".format(cfg["config"]["twitter"])}).text)
+									res = json.loads(requests.get('https://api.twitter.com/1.1/statuses/lookup.json?id={}&tweet_mode=extended'.format(re.findall(r'.*?twitter\.com\/.*?\/status\/(\d*).*?', url[0][0])[0]), headers={"Authorization": "Bearer {}".format(dbc.ret("bot", "twitter"))}).text)
 									if 'user' in res[0]:
 										if 'media' in res[0]['entities']:
 											await self.__buildEmbed(msg, res[0]["entities"]["media"][0]["media_url"])
@@ -268,6 +268,16 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			await ctx.send("Failed. Perhaps tables already exist?")
 			return
 
+	@commands.command()
+	@commands.is_owner()
+	async def twitter(self, ctx, bearer_token: str):
+		try:
+			dbc.save("bot", "twitter", bearer_token)
+			await ctx.send("Successfully set Twitter token!")
+			return
+		except:
+			await ctx.send("Failed to set token.")
+			return
 
 def setup(bot):
 	bot.add_cog(Starboard(bot))
