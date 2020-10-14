@@ -14,8 +14,8 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	def __init__(self, bot):
 		self.bot = bot
 		self.exceptions = []
-		self.s = dbc.db["servers"]
-		self.o = dbc.db["overrides"]
+		self.s = dbc.db["starboardServers"]
+		self.o = dbc.db["starboardOverrides"]
 		#self.r = self.s.find_one(server_id=msg.guild.id)
 
 	# https://stackoverflow.com/a/45579374
@@ -261,8 +261,8 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		if self.s.find_one(server_id=ctx.message.guild.id) is not None:	
 			return
 		try:
-			dbc.db.query('CREATE TABLE overrides (channel_id,channel_am);')
-			dbc.db.query('CREATE TABLE servers (ignore_list,archive_channel,archive_emote,archive_emote_amount,server_id);')
+			dbc.db.query('CREATE TABLE starboardOverrides (channel_id,channel_am);')
+			dbc.db.query('CREATE TABLE starboardServers (ignore_list,archive_channel,archive_emote,archive_emote_amount,server_id,);')
 			await ctx.send("Successfully created tables.")
 		except:
 			await ctx.send("Failed. Perhaps tables already exist?")

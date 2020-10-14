@@ -80,13 +80,13 @@ class Default(commands.Cog, name="General Commands"):
 				await ctx.send("Failed to reset modrole")
 			await ctx.send("Successfully reste modrole")
 
-	@commands.command()
-	@commands.is_owner()
-	async def twitter(self, ctx, *, b: str):
-		"""Sets Twitter bearer key for embedding Tweets."""
-		dbc.save('bot', 'twitter', b)
-		await ctx.send("Succesfully updated bearer key.")
-		b = 0
+	#@commands.command()
+	#@commands.is_owner()
+	#async def twitter(self, ctx, bearer_ket: str):
+	#	"""Sets Twitter bearer key for embedding Tweets."""
+	#	dbc.save('bot', 'twitter', bearer)
+	#	await ctx.send("Succesfully updated bearer key.")
+	#	b = 0
 
 def setup(bot):
 	bot.add_cog(Default(bot))
