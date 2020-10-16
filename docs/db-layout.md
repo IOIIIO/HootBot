@@ -73,7 +73,20 @@ Data specific to channel overrides for Starboard cog.
 - **anonymous**
     *True/False value on whether moderator names should be forwardedto the complaintant*
 - **enabled**
-    *True/(False/None) value on whether modMail is enabled in thisguild*
+    *True/(False/None) value on whether modMail is enabled in this guild*
+- **ping**
+    *ID of role or user to be mentioned with the message. Can be None*
+
+### modMailOpen
+
+- **server_id**
+    *ID of server to which the channel belongs*
+- **channel_id**
+    *ID of the channel connected to*
+- **user_id**
+    *ID of the user connected to*
+- **dm_id**
+    *ID of the DM channel connected from*
 
 ---
 
