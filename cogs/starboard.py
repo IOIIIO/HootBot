@@ -16,6 +16,13 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		self.exceptions = []
 		self.s = dbc.db["starboardServers"]
 		self.o = dbc.db["starboardOverrides"]
+		if dbc.db["starboardServers"] is None:	
+			try:
+				dbc.db.query('CREATE TABLE starboardOverrides (channel_id,channel_am);')
+				dbc.db.query('CREATE TABLE starboardServers (ignore_list,archive_channel,archive_emote,archive_emote_amount,server_id,);')
+				print("Successfully created starboard tables.")
+			except:
+				print("Failed. Perhaps starboard tables already exist?")
 		#self.r = self.s.find_one(server_id=msg.guild.id)
 
 	# https://stackoverflow.com/a/45579374
@@ -253,20 +260,6 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 			print(E)
 			return
 		await ctx.send("Succesfully setup starboard")
-
-	@commands.command()	
-	@commands.is_owner()
-	async def firstrun(self, ctx):
-		"""Prepares the database for use with the starboard."""
-		if self.s.find_one(server_id=ctx.message.guild.id) is not None:	
-			return
-		try:
-			dbc.db.query('CREATE TABLE starboardOverrides (channel_id,channel_am);')
-			dbc.db.query('CREATE TABLE starboardServers (ignore_list,archive_channel,archive_emote,archive_emote_amount,server_id,);')
-			await ctx.send("Successfully created tables.")
-		except:
-			await ctx.send("Failed. Perhaps tables already exist?")
-			return
 
 	@commands.command()
 	@commands.is_owner()

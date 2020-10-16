@@ -1,5 +1,7 @@
 # Modmail
 
+---
+
 ## Intended functionality
 
 1. User DMs bot with complaint
@@ -8,9 +10,13 @@
 3. Read guild's settings on how to forward modmail.
 4. Forward modmail as defined.
 
+---
+
 ## Implemented functionality
 
 - None
+
+---
 
 ## Forward models
 
@@ -38,3 +44,5 @@ Creates a channel for the complaint in which the moderators can interact with co
 3. Send result to new channel
 4. Forward all messages sent to this channel to the complaintant's DMs and vice versa.
 5. End complaint with command sent be either party.
+
+---
