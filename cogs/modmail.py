@@ -149,6 +149,8 @@ class Mail(commands.Cog, name="ModMail Commands"):
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
+		if message.author.id == self.bot.user.id:
+			return
 		if message.channel.type == discord.ChannelType.text:
 			for b in dbc.db["modMailOpen"].find(server_id=message.guild.id):
 				if int(message.channel.id) == int(b["channel_id"]) and int(message.channel.name) == int(b["user_id"]):
@@ -198,6 +200,44 @@ class Mail(commands.Cog, name="ModMail Commands"):
 				await ctx.send("Succesfully enabled modMail")
 		except:
 			await ctx.send("Failed to change value.")
+
+	@commands.Command
+	@commands.dm_only()
+	async def end(self, ctx):
+		if dbc.db["modMailOpen"].find_one(user_id=ctx.message.author.id, dm_id=ctx.message.channel.id) is None:
+			await ctx.send("Not in modMail conversation!")
+			return
+
+		def checkBool(m):
+			return m.author == ctx.message.author and (m.content == "y" or m.content == "n")
+
+		async def interact1(self, ctx):
+			await ctx.send("Are you sure you want to end the conversation? (y/n)")
+			try:
+				answer = await self.bot.wait_for('message', check=checkBool, timeout=30)
+				if answer.content == "y":
+					return True
+				elif answer.content == "n":
+					return False
+				else:
+					await ctx.send("Invalid value.")
+					b = await interact1(self, ctx)
+					return b
+			except asyncio.TimeoutError:
+				await ctx.send('Sorry, you took too long to answer.')
+				return
+
+		try:
+			end = await interact1(self, ctx)
+			if end == True:
+				chan = self.bot.get_channel(dbc.db["modMailOpen"].find_one(user_id=ctx.message.author.id, dm_id=ctx.message.channel.id)["channel_id"])
+				await chan.edit(name="old-{}".format(chan.name))
+				dbc.db["modMailOpen"].delete(user_id=ctx.message.author.id, dm_id=ctx.message.channel.id, channel_id=chan.id)
+				await ctx.send("Ended succesfully")
+			else:
+				await ctx.send("Okay.")
+		except:
+			await ctx.send("Failed to end conversation.")
 
 def setup(bot):
 	bot.add_cog(Mail(bot))
