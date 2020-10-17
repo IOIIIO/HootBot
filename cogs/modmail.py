@@ -14,19 +14,27 @@ class Mail(commands.Cog, name="ModMail Commands"):
 		if list(dbc.db["modMail"].all()) == []:	
 			try:
 				dbc.db.query('CREATE TABLE modMail (server_id, type, location, anonymous, enabled, ping);')
-				dbc.db.query('CREATE TABLE modMailOpen (server_id, channel_id, user_id);')
+				dbc.db.query('CREATE TABLE modMailOpen (server_id, channel_id, user_id, dm_id);')
 				print("Successfully created modmail tables.")
 			except:
 				print("Failed. Perhaps modmail tables already exist?")
 
-	def __makeEmbed(self, ctx, content, type=False):
+	def __makeEmbed(self, ctx, content=None, type=False):
 		if type == False:
 			b = ctx.message
+			con = content
 		else:
 			b = ctx
+			con = ctx.clean_content
+
+		if con == None or con ==  "":
+			con='None'
+		
 		embed=discord.Embed(title="ModMail from {}".format(b.author.display_name))
 		embed.set_thumbnail(url=b.author.avatar_url)
-		embed.add_field(name="Message:", value=content, inline=False)
+		embed.add_field(name="Message:", value=con, inline=False)
+		if len(b.attachments) != 0:
+			embed.set_image(url=b.attachments[0].url)
 		embed.set_footer(text="Sent by: {} (ID: {})".format(b.author.name, b.author.id))
 		return embed
 
@@ -113,7 +121,7 @@ class Mail(commands.Cog, name="ModMail Commands"):
 		selectedGuild = await interact1(self, ctx) 
 		if selectedGuild == None:
 			return
-		if ctx.message.user.id in self.s.find(server_id=selectedGuild)["user_id"]:
+		if ctx.message.author.id in self.s.find(server_id=selectedGuild):
 			ctx.send("You already have a session ongoing!")
 			return
 		await ctx.send("Okay, confirmed guild is: {} with ID {}".format(matchedGuilds[selectedGuild], selectedGuild))
@@ -131,9 +139,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 		if cttype == 3:
 			await ctx.send("This guild has two-way communication enabled. Moderators will be able to communicate with you through this DM. \n To end this conversation please type {}end. \n Attempting to establish communication.".format(ctx.prefix))
 			try:
-				channel = await self.bot.get_channel(self.s.find_one(server_id=selectedGuild)['location']).create_text_channel(name=ctx.message.author.name)
+				channel = await self.bot.get_channel(self.s.find_one(server_id=selectedGuild)['location']).create_text_channel(name=ctx.message.author.id)
 				await channel.send(embed=embed)
-				dbc.db["modChatOpen"].insert(server_id=selectedGuild, channel_id=channel.id, user_id=ctx.message.author.id, dm_id=ctx.message.channel.id)
+				dbc.db["modMailOpen"].insert(dict(server_id=selectedGuild, channel_id=channel.id, user_id=ctx.message.author.id, dm_id=ctx.message.channel.id))
 				await ctx.send("Established.")
 			except:
 				await ctx.send("Something went wrong.")
@@ -141,15 +149,26 @@ class Mail(commands.Cog, name="ModMail Commands"):
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
-		if type(self.bot.get_channel(message.channel_id)) == discord.abc.GuildChannel:
-			if message.channel_id in dbc.db["modChatOpen"].find(server_id=message.server_id)["channel_id"]:
-				#chan = self.bot.get_user(dbc.db["modChatOpen"].find_one(channel_id=message.channel_id)["user_id"]).dm_channel
-				chan = self.bot.get_channel(dbc.db["modChatOpen"].find_one(channel_id=message.channel_id))
-				chan.send(embed=self.__makeEmbed(self, message, message.clean_content, True))
+		if message.channel.type == discord.ChannelType.text:
+			for b in dbc.db["modMailOpen"].find(server_id=message.guild.id):
+				if int(message.channel.id) == int(b["channel_id"]) and int(message.channel.name) == int(b["user_id"]):
+					#chan = self.bot.get_user(dbc.db["modMailOpen"].find_one(channel_id=message.channel_id)["user_id"]).dm_channel
+					user = self.bot.get_user(int(message.channel.name))
+					if user.dm_channel is not None:
+						chan = user.dm_channel
+					else:
+						chan = await user.create_dm()
+					await chan.send(embed=self.__makeEmbed(message, type=True))
+		elif message.channel.type == discord.ChannelType.private:
+			for b in dbc.db["modMailOpen"].find(dm_id=message.channel.id):
+				if message.channel.id == b["dm_id"] and message.author.id == b["user_id"]:
+					#chan = self.bot.get_user(dbc.db["modMailOpen"].find_one(channel_id=message.channel_id)["user_id"]).dm_channel
+					chan = self.bot.get_channel(int(b["channel_id"]))
+					await chan.send(embed=self.__makeEmbed(message, type=True))
 
 	@commands.Command
 	@checks.mod()
-	async def setupmodchat(self, ctx, type: int, anonymous: str, location: int, mention: discord.User = None):
+	async def setupmodMail(self, ctx, type: int, anonymous: str, location: int, mention: discord.User = None):
 		"""Sets"""
 		if self.s.find_one(server_id=ctx.message.guild.id) is not None:
 			return
@@ -158,25 +177,25 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			try:
 				self.s.insert(dict(type = type, anonymous = anonymous, location = location, server_id=ctx.message.guild.id, enabled = True, ping = mention	))
 			except Exception as E:
-				await ctx.send("Failed to setup modchat.")
+				await ctx.send("Failed to setup modMail.")
 				print(E)
 				return
-			await ctx.send("Succesfully setup and enabled modchat")
+			await ctx.send("Succesfully setup and enabled modMail")
 
 	@commands.Command
 	@checks.mod()
-	async def togglemodchat(self, ctx):
+	async def togglemodMail(self, ctx):
 		if self.s.find_one(server_id=ctx.message.guild.id) is None:
-			await ctx.send("Use {}setupmodchat to setup modchat first!".format(ctx.prefix))
+			await ctx.send("Use {}setupmodMail to setup modMail first!".format(ctx.prefix))
 			return
 		
 		try:
 			if self.s.find_one(server_id=ctx.message.guild.id)["enabled"] == True:
 				self.s.update(dict(server_id=ctx.message.guild.id, enabled=False), ["server_id"])
-				await ctx.send("Succesfully disabled ModChat")
+				await ctx.send("Succesfully disabled modMail")
 			else:
 				self.s.update(dict(server_id=ctx.message.guild.id, enabled=True), ["server_id"])
-				await ctx.send("Succesfully enabled ModChat")
+				await ctx.send("Succesfully enabled modMail")
 		except:
 			await ctx.send("Failed to change value.")
 
