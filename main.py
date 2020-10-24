@@ -104,10 +104,7 @@ async def buildEmbed(msg, url, tweet = '', author = ''):
 	elif isinstance(msg, discord.Message) and len(msg.content):
 		embed.add_field(name='Content', value=msg.content, inline=False)
 	embed.add_field(name='Message Link', value='https://discordapp.com/channels/{}/{}/{}'.format(msg.guild.id, msg.channel.id, msg.id), inline=False)
-	if len(author):
-		auth = msg.guild.get_member_named(author).mention
-	else:
-		auth = msg.author.mention
+	auth = msg.author.mention
 	embed.add_field(name='Author', value=auth, inline=True)
 	embed.add_field(name='Channel', value=msg.channel.mention, inline=True)
 	embed.set_image(url=url)
@@ -209,7 +206,7 @@ async def on_raw_reaction_add(payload):
 							for b in msg.embeds[0].to_dict()["fields"]:
 								if "Sender" in b["name"]:
 									auth = b["value"]
-							await buildEmbed(msg, msg.embeds[0].image.url, msg.embeds[0].description, auth)
+							await buildEmbed(msg, msg.embeds[0].image.url, msg.embeds[0].description)
 						else:
 							await buildEmbed(msg, '')
 
