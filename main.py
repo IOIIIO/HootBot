@@ -192,7 +192,7 @@ async def on_raw_reaction_add(payload):
 								await buildEmbed(msg, return_reddit(url[0][0]))
 							else:
 								if msg.embeds and msg.embeds[0].url != url[0][0]:
-									await buildEmbed(msg, msg.embeds[0].url)
+									await buildEmbed(msg, msg.embeds[0].url, msg.embeds[0].fields[0].__getattribute__('value'))
 								else:
 									if msg.attachments:
 										await buildEmbed(msg, msg.attachments[0].url)
@@ -206,7 +206,7 @@ async def on_raw_reaction_add(payload):
 							for b in msg.embeds[0].to_dict()["fields"]:
 								if "Sender" in b["name"]:
 									auth = b["value"]
-							await buildEmbed(msg, msg.embeds[0].image.url, msg.embeds[0].description)
+							await buildEmbed(msg, msg.embeds[0].image.url, msg.embeds[0].description, auth)
 						else:
 							await buildEmbed(msg, '')
 
@@ -234,7 +234,7 @@ async def redembed(message):
 							b = return_reddit(url2)
 							if b != '':
 								embed=discord.Embed(title="Reddit Embed", description=message.content)
-								embed.add_field(name='Sender', value=str(message.author))
+								embed.add_field(name='Sender', value=message.author.mention)
 								embed.set_image(url=b)
 								await message.channel.send(embed=embed)
 						except:
@@ -246,7 +246,7 @@ async def insta(message):
 				if url != []:
 					if "instagram.com" in url[0][0]:
 						embed=discord.Embed(title="Instagram Embed", description=message.content)
-						embed.add_field(name='Sender', value=str(message.author))
+						embed.add_field(name='Sender', value=message.author.mention)
 						embed.set_image(url=BeautifulSoup(requests.get(url[0][0].replace('mobile.', '')).text, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
 						await message.channel.send(embed=embed)
 
