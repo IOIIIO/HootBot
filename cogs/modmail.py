@@ -3,8 +3,7 @@ from discord.ext import commands
 import cogs.support.db as dbc 
 import cogs.support.perms as checks
 import asyncio
-import traceback
-import sys
+import re
 
 class Mail(commands.Cog, name="ModMail Commands"):
 	"""Comands for setting up and using ModMail."""
@@ -19,7 +18,7 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			except:
 				print("Failed. Perhaps modmail tables already exist?")
 
-	def __makeEmbed(self, ctx, content=None, type=False):
+	def __makeEmbed(self, ctx, content=None, type=False, anon=False):
 		if type == False:
 			b = ctx.message
 			con = content
@@ -28,21 +27,36 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			con = ctx.clean_content
 
 		if con == None or con ==  "":
-			con='None'
+			con = 'None'
+
+		if anon == False:
+			dn = b.author.display_name
+			pfp = b.author.avatar_url
+			n = b.author.name
+			i = b.author.id
+		else:
+			dn = "Anon"
+			pfp = b.author.default_avatar_url
+			n = "Anonymous"
+			i = "-"
 		
-		embed=discord.Embed(title="ModMail from {}".format(b.author.display_name))
-		embed.set_thumbnail(url=b.author.avatar_url)
+		embed=discord.Embed(title="ModMail from {}".format(dn))
+		embed.set_thumbnail(url=pfp)
 		embed.add_field(name="Message:", value=con, inline=False)
 		if len(b.attachments) != 0:
 			embed.set_image(url=b.attachments[0].url)
-		embed.set_footer(text="Sent by: {} (ID: {})".format(b.author.name, b.author.id))
+		embed.set_footer(text="Sent by: {} (ID: {})".format(n, i))
 		return embed
 
 	@commands.Command
 	@commands.dm_only()
 	@commands.max_concurrency(1, commands.BucketType.member)
 	async def contact(self, ctx):
+		"""Send a modmail to any configured server"""
 		await ctx.trigger_typing()
+		if dbc.db["modMailOpen"].find_one(user_id=ctx.message.author.id, dm_id=ctx.message.channel.id) is not None:
+			ctx.send("Already in a conversation")
+			return
 		matchedGuilds = {}
 		response = ""
 
@@ -72,9 +86,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			await ctx.send("You chose server {} with ID {} \n Is this correct? (y/n)".format(matchedGuilds[electedGuild], electedGuild))
 			try:
 				answer = await self.bot.wait_for('message', check=checkBool, timeout=15)
-				if answer.content == "y":
+				if answer.content.lower() == "y":
 					return electedGuild
-				elif answer.content == "n":
+				elif answer.content.lower() == "n":
 					b = await interact1(self, ctx)
 					return b
 				else:
@@ -99,9 +113,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			await ctx.send("Is this message correct? (y/n)")
 			try:
 				answer = await self.bot.wait_for('message', check=checkBool, timeout=30)
-				if answer.content == "y":
+				if answer.content.lower() == "y":
 					return content
-				elif answer.content == "n":
+				elif answer.content.lower() == "n":
 					b = await interact3(self, ctx)
 					return b
 				else:
@@ -118,33 +132,51 @@ class Mail(commands.Cog, name="ModMail Commands"):
 					matchedGuilds[guild.id] = guild.name
 		for b in range(len(matchedGuilds)):
 			response = response + "{}. {} \n".format(b, list(matchedGuilds.values())[b])
-		selectedGuild = await interact1(self, ctx) 
+		if len(matchedGuilds) == 0:
+			await ctx.send("You don't share any servers with the bot that have modmail enabled.")
+		elif len(matchedGuilds) == 1:
+			selectedGuild = list(matchedGuilds.keys())[0]
+		else:
+			selectedGuild = await interact1(self, ctx) 
 		if selectedGuild == None:
 			return
 		if ctx.message.author.id in self.s.find(server_id=selectedGuild):
-			ctx.send("You already have a session ongoing!")
+			await ctx.send("You already have a session ongoing!")
 			return
 		await ctx.send("Okay, confirmed guild is: {} with ID {}".format(matchedGuilds[selectedGuild], selectedGuild))
 		message = await interact3(self, ctx)
 		if message == None:
 			return
-		embed = self.__makeEmbed(ctx, message)
+		
 		cttype = self.s.find_one(server_id=selectedGuild)["type"]
+		tag = None
+		if self.s.find_one(server_id=selectedGuild)["ping"] is not None:
+			#tag1 = self.bot.get_user(self.s.find_one(server_id=selectedGuild)["ping"])
+			tag2 = self.s.find_one(server_id=selectedGuild)["ping"]
+			#tag = self.bot.get_user(self.s.find_one(server_id=selectedGuild)["ping"]).mention
+			tag = tag2
+		else:
+			tag = ""
 		if cttype == 1 or cttype == 2:
+			if self.s.find_one(server_id=selectedGuild)["anonymous"]:
+				embed = self.__makeEmbed(ctx, message, anon=True)
+			else:
+				embed = self.__makeEmbed(ctx, message)
 			try: 
-				await self.bot.get_channel(int(self.s.find_one(server_id=selectedGuild)['location'])).send(embed=embed)
+				await self.bot.get_channel(int(self.s.find_one(server_id=selectedGuild)['location'])).send(embed=embed, content=tag)
 				await ctx.send("Sent")
 			except:
 				await ctx.send("Failed to send.")
 		if cttype == 3:
+			embed = self.__makeEmbed(ctx, message)
 			await ctx.send("This guild has two-way communication enabled. Moderators will be able to communicate with you through this DM. \n To end this conversation please type {}end. \n Attempting to establish communication.".format(ctx.prefix))
 			try:
 				channel = await self.bot.get_channel(self.s.find_one(server_id=selectedGuild)['location']).create_text_channel(name=ctx.message.author.id)
-				await channel.send(embed=embed)
+				await channel.send(embed=embed, content=tag)
 				dbc.db["modMailOpen"].insert(dict(server_id=selectedGuild, channel_id=channel.id, user_id=ctx.message.author.id, dm_id=ctx.message.channel.id))
 				await ctx.send("Established.")
 			except:
-				await ctx.send("Something went wrong.")
+				await ctx.send("Something went wrong. Try Again.")
 				return
 
 	@commands.Cog.listener()
@@ -170,42 +202,131 @@ class Mail(commands.Cog, name="ModMail Commands"):
 
 	@commands.Command
 	@checks.mod()
-	async def setupmodMail(self, ctx, type: int, anonymous: str, location: int, mention: discord.User = None):
-		"""Sets"""
+	async def setupmodmail(self, ctx, type: int, anonymous: str, location: int, mention: discord.User = None):
+		"""Initial setup for modmail"""
 		if self.s.find_one(server_id=ctx.message.guild.id) is not None:
 			return
+
+		if anonymous == "False":
+			anonymous = False
+		elif anonymous == "True":
+			anonymous = True
 
 		if type > 0 and type < 4:
 			try:
 				self.s.insert(dict(type = type, anonymous = anonymous, location = location, server_id=ctx.message.guild.id, enabled = True, ping = mention	))
 			except Exception as E:
-				await ctx.send("Failed to setup modMail.")
+				await ctx.send("Failed to setup modmail.")
 				print(E)
 				return
-			await ctx.send("Succesfully setup and enabled modMail")
+			await ctx.send("Succesfully setup and enabled modmail")
 
 	@commands.Command
 	@checks.mod()
-	async def togglemodMail(self, ctx):
+	async def channelmodmail(self, ctx, location: int):
+		"""Set a modmail channel"""
 		if self.s.find_one(server_id=ctx.message.guild.id) is None:
-			await ctx.send("Use {}setupmodMail to setup modMail first!".format(ctx.prefix))
+			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
+			return
+
+		try:
+			self.s.update(dict(server_id=ctx.message.guild.id, location=location), ["server_id"])
+			await ctx.send("Succesfully set modmail location to {}".format(location))
+		except:
+			await ctx.send("Failed to change value.")
+
+		
+
+	@commands.Command
+	@checks.mod()
+	async def togglemodmail(self, ctx):
+		"""Toggle whether modmail is enabled"""
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
+			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
 			return
 		
 		try:
 			if self.s.find_one(server_id=ctx.message.guild.id)["enabled"] == True:
 				self.s.update(dict(server_id=ctx.message.guild.id, enabled=False), ["server_id"])
-				await ctx.send("Succesfully disabled modMail")
+				await ctx.send("Succesfully disabled modmail")
 			else:
 				self.s.update(dict(server_id=ctx.message.guild.id, enabled=True), ["server_id"])
-				await ctx.send("Succesfully enabled modMail")
+				await ctx.send("Succesfully enabled modmail")
+		except:
+			await ctx.send("Failed to change value.")
+
+	@commands.Command
+	@checks.mod()
+	async def anonymousmodmail(self, ctx):
+		"""Toggle whether modmail should be anonymous"""
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
+			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
+			return
+		
+		try:
+			if self.s.find_one(server_id=ctx.message.guild.id)["anonymous"] == True:
+				self.s.update(dict(server_id=ctx.message.guild.id, anonymous=False), ["server_id"])
+				await ctx.send("Succesfully disabled anonymous mode for modmail")
+			else:
+				self.s.update(dict(server_id=ctx.message.guild.id, anonymous=True), ["server_id"])
+				await ctx.send("Succesfully enabled anonymous mode for modmail")
+		except:
+			await ctx.send("Failed to change value.")
+	
+	@commands.Command
+	@checks.mod()
+	async def mentionmodmail(self, ctx, mention = None):
+		"""Set which role/user to mention with the first modmail."""
+		role = False
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
+			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
+			return
+		if mention != None:
+			mention = int("".join(re.findall(r'\d+', mention)))
+		print(ctx.message.guild.get_role(mention))
+		print(ctx.message.guild.get_member(mention))
+		if not (ctx.message.guild.get_role(mention) == None or ctx.message.guild.get_member(mention) == None) or mention == '':
+			await ctx.send("Invalid argument")
+			return
+		elif mention == None:
+			mention2 = None
+		else: 
+			if ctx.message.guild.get_role(mention) != None:
+				role = True
+				mention2 = ctx.message.guild.get_role(mention).mention
+			if role == False and ctx.message.guild.get_member(mention) != None:
+				mention2 = ctx.message.guild.get_member(mention).mention
+		
+
+		
+		try:
+			self.s.update(dict(server_id=ctx.message.guild.id, ping=mention2), ["server_id"])
+			if mention == None:
+				mention2 = "None"
+			await ctx.send("Succesfully set modmail ping to {}".format(mention2))
+		except:
+			await ctx.send("Failed to change value.")
+
+	@commands.Command
+	@checks.mod()
+	async def typemodmail(self, ctx, type: int):
+		"""Sets which type of modmail to use on this guild."""
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
+			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
+			return
+		
+		try:
+			self.s.update(dict(server_id=ctx.message.guild.id, type=type), ["server_id"])
+			await ctx.send("Succesfully set modmail type to {}".format(type))
 		except:
 			await ctx.send("Failed to change value.")
 
 	@commands.Command
 	@commands.dm_only()
 	async def end(self, ctx):
+		"""End an open modmail conversation"""
 		if dbc.db["modMailOpen"].find_one(user_id=ctx.message.author.id, dm_id=ctx.message.channel.id) is None:
-			await ctx.send("Not in modMail conversation!")
+			await ctx.send("Not in modmail conversation!")
 			return
 
 		def checkBool(m):
@@ -215,9 +336,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			await ctx.send("Are you sure you want to end the conversation? (y/n)")
 			try:
 				answer = await self.bot.wait_for('message', check=checkBool, timeout=30)
-				if answer.content == "y":
+				if answer.content.lower() == "y":
 					return True
-				elif answer.content == "n":
+				elif answer.content.lower() == "n":
 					return False
 				else:
 					await ctx.send("Invalid value.")
@@ -231,8 +352,47 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			end = await interact1(self, ctx)
 			if end == True:
 				chan = self.bot.get_channel(dbc.db["modMailOpen"].find_one(user_id=ctx.message.author.id, dm_id=ctx.message.channel.id)["channel_id"])
-				await chan.edit(name="old-{}".format(chan.name))
 				dbc.db["modMailOpen"].delete(user_id=ctx.message.author.id, dm_id=ctx.message.channel.id, channel_id=chan.id)
+				await chan.edit(name="old-{}".format(chan.name))
+				await ctx.send("Ended succesfully")
+			else:
+				await ctx.send("Okay.")
+		except:
+			await ctx.send("Failed to end conversation.")
+
+	@commands.Command
+	@checks.mod()
+	async def endoverride(self, ctx):
+		"""Forcefully end an open modmail conversation"""
+		if dbc.db["modMailOpen"].find_one(user_id=int(ctx.message.channel.name), channel_id=ctx.message.channel.id) is None:
+			await ctx.send("Not in modmail conversation!")
+			return
+
+		def checkBool(m):
+			return m.author == ctx.message.author and (m.content == "y" or m.content == "n")
+
+		async def interact1(self, ctx):
+			await ctx.send("Are you sure you want to end the conversation? (y/n)")
+			try:
+				answer = await self.bot.wait_for('message', check=checkBool, timeout=30)
+				if answer.content.lower() == "y":
+					return True
+				elif answer.content.lower() == "n":
+					return False
+				else:
+					await ctx.send("Invalid value.")
+					b = await interact1(self, ctx)
+					return b
+			except asyncio.TimeoutError:
+				await ctx.send('Sorry, you took too long to answer.')
+				return
+
+		try:
+			end = await interact1(self, ctx)
+			if end == True:
+				chan = self.bot.get_channel(dbc.db["modMailOpen"].find_one(user_id=int(ctx.message.channel.name), channel_id=ctx.message.channel.id)["channel_id"])
+				dbc.db["modMailOpen"].delete(user_id=int(ctx.message.channel.name), channel_id=ctx.message.channel.id)
+				await chan.edit(name="old-{}".format(chan.name))
 				await ctx.send("Ended succesfully")
 			else:
 				await ctx.send("Okay.")

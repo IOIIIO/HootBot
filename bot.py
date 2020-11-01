@@ -18,7 +18,8 @@ except Exception as e:
     print("Reason: {}".format(e))
     exit()
 
-bot = commands.Bot(command_prefix=dbc.ret('bot', 'prefix'), description="HootBot, hooting your images to safety!")
+intents = discord.Intents().all()
+bot = commands.Bot(command_prefix=dbc.ret('bot', 'prefix'), description="HootBot, hooting your images to safety!", intents=intents)
 extensions = ['cogs.default', 'cogs.modmail', 'cogs.JazUtils']
 
 if __name__ == '__main__':

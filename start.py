@@ -90,11 +90,11 @@ class Launch:
             self.update()
             self.maintenance()
         elif x == "2":
-            self.req()
+            self.req2()
             self.maintenance()
         elif x == "3":
             self.update()
-            self.req(False)
+            self.req2(False)
             self.maintenance()
         elif x == "4":
             self.delete()
@@ -148,6 +148,11 @@ class Launch:
         if wipe == True:
             self.cls()
         subprocess.check_call([sys.executable, "-m", "pip", "install",  "-r", "requirements.txt"])
+
+    def req2(self, wipe = True):
+        if wipe == True:
+            self.cls()
+        subprocess.check_call([sys.executable, "-m", "pip", "install",  "-r", "requirements.txt", "-U"])
 
     def update(self):
         self.cls()

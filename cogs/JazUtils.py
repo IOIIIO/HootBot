@@ -8,6 +8,7 @@ import random
 import datetime
 import colorsys
 from   discord.ext import commands
+import re
 
 # constant for paginating embeds
 EMBED_MAX_LEN = 2048
@@ -24,7 +25,7 @@ class jazutils(commands.Cog, name="General Utility Commands"):
 	@commands.command(pass_context=True)
 	async def snowflake(self, ctx, *, sid : str = None):
 		"""Show the date a snowflake ID was created"""
-
+		sid = "".join(re.findall(r'\d+', sid))
 		sid = int(sid)
 		timestamp = ((sid >> 22) + 1420070400000) / 1000 # python uses seconds not milliseconds
 		cdate = datetime.datetime.utcfromtimestamp(timestamp)
@@ -36,6 +37,7 @@ class jazutils(commands.Cog, name="General Utility Commands"):
 	async def fullsnowflake(self, ctx, *, sid : str = None):
 		"""Show all available data about a snowflake ID"""
 		c = False
+		sid = "".join(re.findall(r'\d+', sid))
 		sid = int(sid)
 		timestamp = ((sid >> 22) + 1420070400000) / 1000 # python uses seconds not milliseconds
 		iwid = (sid & 0x3E0000) >> 17
