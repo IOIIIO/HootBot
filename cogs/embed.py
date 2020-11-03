@@ -61,7 +61,7 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 					b = redcog.return_reddit(url2)
 					if b != '':
 						embed=discord.Embed(title="Reddit Embed", description=message.content)
-						embed.add_field(name='Sender', value=str(message.author))
+						embed.add_field(name='Sender', value=message.author.mention)
 						embed.set_image(url=b)
 						await message.channel.send(embed=embed)
 				except:
@@ -72,7 +72,7 @@ class Embed(commands.Cog, name="Image Embedding Commands"):
 		if url != []:
 			if "instagram.com" in url[0][0]:
 				embed=discord.Embed(title="Instagram Embed", description=message.content)
-				embed.add_field(name='Sender', value=str(message.author))
+				embed.add_field(name='Sender', value=message.author.mention)
 				embed.set_image(url=BeautifulSoup(requests.get(url[0][0].replace('mobile.', '')).text, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
 				await message.channel.send(embed=embed)
 
