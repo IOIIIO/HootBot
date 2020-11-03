@@ -9,6 +9,8 @@ from urllib.parse import parse_qs, urlparse, quote_plus
 import cogs.support.db as dbc
 import cogs.support.perms as perms
 import ast
+import cogs.derpi as derpi
+
 class Starboard(commands.Cog, name="Starboard Commands"):
 	"""Commands related to controlling the starboard."""
 	def __init__(self, bot):
@@ -16,10 +18,12 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		self.exceptions = []
 		self.s = dbc.db["starboardServers"]
 		self.o = dbc.db["starboardOverrides"]
+		self.i = dbc.db["starboardIgnore"]
 		if dbc.db["starboardServers"] is None:	
 			try:
 				dbc.db.query('CREATE TABLE starboardOverrides (channel_id,channel_am);')
-				dbc.db.query('CREATE TABLE starboardServers (ignore_list,archive_channel,archive_emote,archive_emote_amount,server_id,);')
+				dbc.db.query('CREATE TABLE starboardServers (archive_channel,archive_emote,archive_emote_amount,server_id,);')
+				dbc.db.query('CREATE TABLE starboardIgnore (id, server_id);')
 				print("Successfully created starboard tables.")
 			except:
 				print("Failed. Perhaps starboard tables already exist?")
@@ -35,17 +39,23 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		if pth:
 			return pth[-1]
 
-	async def __buildEmbed(self, msg, url, tweet = '', author = ''):
-		#if url != "":
-			#if cfg["config"]["cache"] == True:
-			#	try:
-			#		url2 = url
-			#		if not any(ext in url for ext in ['.mp4', ".mov", ".webm", ".webp"]):
-			#			client = ImgurClient(cfg["config"]["imgur_usr"], cfg["config"]["imgur_scr"])
-			#			url = client.upload_from_url(url, anon=True)["link"]
-			#	except:
-			#		url = url2
-			#		pass
+	async def __buildEmbed(self, msg, url, tweet = '', author = '', link = ''):
+		if url != "":
+			print(dbc.ret("bot", "archive"))
+			if int(dbc.ret("bot", "archive")) == 1:
+			#if True == True:
+				try:
+					url2 = url
+					if any(ext in url for ext in ['.gif', ".jpg", ".webm", ".jpeg", ".png", ".svg"]):
+						b = await derpi.post(str(link), str(url))
+						print(b)
+						url = dbc.ret("bot", "archiveLink") + b["image"]["representations"]["full"]
+					else:
+						url = url2
+						pass
+				except:
+					url = url2
+					pass
 		embed = discord.Embed()
 		if len(tweet):
 			embed.add_field(name='Tweet/Embed Content', value=tweet, inline=False)
@@ -62,34 +72,53 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 
 		await self.bot.get_channel(int(self.s.find_one(server_id=msg.guild.id)['archive_channel'])).send(embed=embed)
 
-	def arrs(self, value, msg, type=True, type2=True):
-		#if ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"]) != None:
-		if type2 == True:
+	#def arrs(self, value, msg, type=True):
+	#	#if ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"]) != None:
+	#	if type == True:
+	#		c = msg.guild.id
+	#	elif type == False:
+	#		c = int(msg)
+	#	#print(self.s.find_one(server_id=c))
+	#	b = ast.literal_eval(self.s.find_one(server_id=c)["ignore_list"])
+	#	try:
+	#		if type == True:
+	#			b.append(value)
+	#		elif type == False:
+	#			b.remove(value)
+	#	except:
+	#		return None
+	#	d = str(b)
+	#	#print(d)
+	#	self.s.update(dict(ignore_list=d, server_id=c), ['server_id'])
+	#	#else:
+	#	#	save(sheet, name, value)
+
+	def arrs(self, value, msg, type=True):
+		if type == True:
 			c = msg.guild.id
-		elif type2 == False:
-			c = int(msg)
-		#print(self.s.find_one(server_id=c))
-		b = ast.literal_eval(self.s.find_one(server_id=c)["ignore_list"])
+		elif type == False:
+			c = int(msg) #ID is passed by the caller
 		try:
 			if type == True:
-				b.append(value)
+				self.i.insert(dict(id=value, server_id=c))
 			elif type == False:
-				b.remove(value)
+				self.i.delete(id=value, server_id=c)
 		except:
 			return None
-		d = str(b)
-		#print(d)
-		self.s.update(dict(ignore_list=d, server_id=c), ['server_id'])
-		#else:
-		#	save(sheet, name, value)
 
 	@commands.Cog.listener()
 	async def on_raw_reaction_add(self, payload):
 		msg = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+		if not self.s.find_one(server_id=msg.guild.id):
+			return
 
+		if not msg.channel.id == 620082524462383136:
+			return
+
+		#print(self.s.find_one(server_id=msg.guild.id))
 		for reaction in msg.reactions:
 			if type(reaction.emoji) != str and reaction.emoji.id == int(self.s.find_one(server_id=msg.guild.id)['archive_emote']):
-				if str(payload.channel_id)+str(payload.message_id) in ast.literal_eval(self.s.find_one(server_id=msg.guild.id)["ignore_list"]):
+				if self.i.find_one(id=str(payload.channel_id)+str(payload.message_id)) is not None:
 					#print(self.s.find_one(server_id=msg.guild.id))
 					#print(self.s.find_one(server_id=msg.guild.id)["ignore_list"])
 					return
@@ -117,7 +146,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 						#dbc.append(str(msg.guild.id), 'ignore_list', str(payload.channel_id)+str(payload.message_id))
 						if url:
 							if msg.attachments:
-								await self.__buildEmbed(msg, msg.attachments[0].url)
+								await self.__buildEmbed(msg, msg.attachments[0].url, link=url[0][0])
 							else:
 								processed_url = requests.get(url[0][0].replace('mobile.', '')).text
 								"""
@@ -125,34 +154,38 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 								<meta property="og:image" content="link" />
 								"""
 								if 'deviantart.com' in url[0][0] or 'www.instagram.com' in url[0][0] or 'tumblr.com' in url[0][0] or 'pixiv.net' in url[0][0]:
-									await self.__buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'))
+									await self.__buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content'), link=url[0][0])
 								elif 'twitter.com' in url[0][0]:
 									"""
 									either archive the image in the tweet if there is one or archive the text
 									"""
-									res = json.loads(requests.get('https://api.twitter.com/1.1/statuses/lookup.json?id={}&tweet_mode=extended'.format(re.findall(r'.*?twitter\.com\/.*?\/status\/(\d*).*?', url[0][0])[0]), headers={"Authorization": "Bearer {}".format(dbc.ret("bot", "twitter"))}).text)
-									if 'user' in res[0]:
-										if 'media' in res[0]['entities']:
-											await self.__buildEmbed(msg, res[0]["entities"]["media"][0]["media_url"])
+									if dbc.ret("bot", "twitter") != None:
+										try:
+											res = json.loads(requests.get('https://api.twitter.com/1.1/statuses/lookup.json?id={}&tweet_mode=extended'.format(re.findall(r'.*?twitter\.com\/.*?\/status\/(\d*).*?', url[0][0])[0]), headers={"Authorization": "Bearer {}".format(dbc.ret("bot", "twitter"))}).text)
+										except:
+											return
+										if 'user' in res[0]:
+											if 'media' in res[0]['entities']:
+												await self.__buildEmbed(msg, res[0]["entities"]["media"][0]["media_url"], link=url[0][0])
+											else:
+												await self.__buildEmbed(msg, "", res[0]["full_text"])
 										else:
-											await self.__buildEmbed(msg, "", res[0]["full_text"])
-									else:
-										print(res)
+											print(res)
 								elif 'youtube.com' in url[0][0] or 'youtu.be' in url[0][0]:
-									await self.__buildEmbed(msg, 'https://img.youtube.com/vi/{}/0.jpg'.format(self.__get_id(url[0][0])))
+									await self.__buildEmbed(msg, 'https://img.youtube.com/vi/{}/0.jpg'.format(self.__get_id(url[0][0])), link=url[0][0])
 								elif 'dcinside.com' in url[0][0]:
 									await self.__buildEmbed(msg, msg.attachments[0].url)
 								elif 'imgur' in url[0][0]:
 									if 'i.imgur' not in url[0][0]:
-										await self.__buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content').replace('?fb', ''))
+										await self.__buildEmbed(msg, BeautifulSoup(processed_url, 'html.parser').find('meta', attrs={'property':'og:image'}).get('content').replace('?fb', ''), link=url[0][0])
 									else:
 										await self.__buildEmbed(msg, url[0][0])
 								elif 'https://tenor.com' in url[0][0]:
 									for img in BeautifulSoup(processed_url, 'html.parser').findAll('img', attrs={'src': True}):
 										if 'media1.tenor.com' in img.get('src'):
-											await self.__buildEmbed(msg, img.get('src'))
+											await self.__buildEmbed(msg, img.get('src'), link=url[0][0])
 								elif "reddit.com" in url[0][0] or "redd.it" in url[0][0]:
-									await self.__buildEmbed(msg, rdc.return_reddit(url[0][0]))
+									await self.__buildEmbed(msg, rdc.return_reddit(url[0][0]), link=url[0][0])
 								else:
 									if msg.embeds and msg.embeds[0].url != url[0][0]:
 										await self.__buildEmbed(msg, msg.embeds[0].url)
@@ -177,7 +210,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()
 	async def del_entry(self, ctx, msglink: str):
 		"""Removes the given message from the archive cache."""
-		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 			return
 
@@ -188,7 +221,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[2] -> msg id
 		"""
 		try:
-			self.arrs(str(msg_data[1])+str(msg_data[2]), msg_data[0], False, False)
+			self.arrs(str(msg_data[1])+str(msg_data[2]), msg_data[0], False)
 		except:
 			await ctx.send("Failed to remove from database")
 			return
@@ -198,7 +231,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()
 	async def override(self, ctx, msglink: str, link: str):
 		"""Overrides the image that was going to the archived originally."""
-		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 			return
 
@@ -209,14 +242,14 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		msg_data[2] -> msg id
 		"""
 
-		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is not None:
+		if self.s.find_one(server_id=ctx.message.guild.id) is not None:
 			self.exceptions.append(msg_data[1] + msg_data[2])
 
 	@commands.command()
 	@perms.mod()
 	async def setchannelamount(self, ctx, amount:int, channel: discord.TextChannel = None):
 		"""Change the amount of emotes needed for a specific channel. If no channel is passed, it adjusts for the current channel."""
-		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
 			if channel == None:
@@ -231,7 +264,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@perms.mod()
 	async def setamount(self, ctx, b: int):
 		"""Sets the amount of emotes required for a message to reach starboard."""
-		if self.s.find_one(server_id=ctx.message.guild.id)['archive_channel'] is None:
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
 			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
 		else:
 			try:
@@ -241,6 +274,21 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 				await ctx.send("Failed to change amount.")
 				return
 		await ctx.send("Succesfully changed amount to {}".format(b))
+
+	@commands.command()
+	@perms.mod()
+	async def setemote(self, ctx, archive_emote: discord.Emoji):
+		"""Sets the emote required for a message to reach starboard."""
+		if self.s.find_one(server_id=ctx.message.guild.id) is None:
+			await ctx.send("Please set up the bot with <>setup archive_channel archive_emote archive_emote_amount.")
+		else:
+			try:
+				self.s.update(dict(archive_emote=archive_emote.id, server_id=ctx.message.guild.id), ['server_id'])
+				#dbc.save(str(ctx.guild.id), 'archive_emote_amount', b)
+			except:
+				await ctx.send("Failed to change emote.")
+				return
+		await ctx.send("Succesfully changed emote to {}".format(archive_emote))
 
 	@commands.command()
 	@perms.mod()	
@@ -264,6 +312,7 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 	@commands.command()
 	@commands.is_owner()
 	async def twitter(self, ctx, bearer_token: str):
+		"""Setup the twitter bearer for twitter support."""
 		try:
 			dbc.save("bot", "twitter", bearer_token)
 			await ctx.send("Successfully set Twitter token!")
