@@ -19,6 +19,10 @@ class Mail(commands.Cog, name="ModMail Commands"):
 				print("Failed. Perhaps modmail tables already exist?")
 
 	def __makeEmbed(self, ctx, content=None, type=False, anon=False):
+		# Build embed with modmail message
+		# content = string to be entered in Message field
+		# type = specify if ctx is a ctx callback or message callback
+		# anon = specify whether embed should be anonymous
 		if type == False:
 			b = ctx.message
 			con = content
@@ -127,14 +131,14 @@ class Mail(commands.Cog, name="ModMail Commands"):
 				return
 
 		for guild in self.bot.guilds:
-			if self.s.find_one(server_id=guild.id) is not None and self.s.find_one(server_id=guild.id)["enabled"] == True:
-				if guild.get_member(ctx.author.id) is not None:
-					matchedGuilds[guild.id] = guild.name
+			if self.s.find_one(server_id=guild.id) is not None and self.s.find_one(server_id=guild.id)["enabled"] == True: # Get list of all servers with modmail enabled
+				if guild.get_member(ctx.author.id) is not None: # Check which are shared with the user
+					matchedGuilds[guild.id] = guild.name # And append them to the list
 		for b in range(len(matchedGuilds)):
-			response = response + "{}. {} \n".format(b, list(matchedGuilds.values())[b])
-		if len(matchedGuilds) == 0:
+			response = response + "{}. {} \n".format(b, list(matchedGuilds.values())[b]) # Format list for picker
+		if len(matchedGuilds) == 0: # No need to show the picker if no servers are shared
 			await ctx.send("You don't share any servers with the bot that have modmail enabled.")
-		elif len(matchedGuilds) == 1:
+		elif len(matchedGuilds) == 1: # No need to show picker if just one server is shared
 			selectedGuild = list(matchedGuilds.keys())[0]
 		else:
 			selectedGuild = await interact1(self, ctx) 
@@ -150,11 +154,8 @@ class Mail(commands.Cog, name="ModMail Commands"):
 		
 		cttype = self.s.find_one(server_id=selectedGuild)["type"]
 		tag = None
-		if self.s.find_one(server_id=selectedGuild)["ping"] is not None:
-			#tag1 = self.bot.get_user(self.s.find_one(server_id=selectedGuild)["ping"])
-			tag2 = self.s.find_one(server_id=selectedGuild)["ping"]
-			#tag = self.bot.get_user(self.s.find_one(server_id=selectedGuild)["ping"]).mention
-			tag = tag2
+		if self.s.find_one(server_id=selectedGuild)["ping"] is not None: # Check if server has a ping set up
+			tag = self.s.find_one(server_id=selectedGuild)["ping"]
 		else:
 			tag = ""
 		if cttype == 1 or cttype == 2:
@@ -181,12 +182,13 @@ class Mail(commands.Cog, name="ModMail Commands"):
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
+		# Check for new messages
+		# message = new message that has been created
 		if message.author.id == self.bot.user.id:
 			return
 		if message.channel.type == discord.ChannelType.text:
 			for b in dbc.db["modMailOpen"].find(server_id=message.guild.id):
 				if int(message.channel.id) == int(b["channel_id"]) and int(message.channel.name) == int(b["user_id"]):
-					#chan = self.bot.get_user(dbc.db["modMailOpen"].find_one(channel_id=message.channel_id)["user_id"]).dm_channel
 					user = self.bot.get_user(int(message.channel.name))
 					if user.dm_channel is not None:
 						chan = user.dm_channel
@@ -196,13 +198,18 @@ class Mail(commands.Cog, name="ModMail Commands"):
 		elif message.channel.type == discord.ChannelType.private:
 			for b in dbc.db["modMailOpen"].find(dm_id=message.channel.id):
 				if message.channel.id == b["dm_id"] and message.author.id == b["user_id"]:
-					#chan = self.bot.get_user(dbc.db["modMailOpen"].find_one(channel_id=message.channel_id)["user_id"]).dm_channel
 					chan = self.bot.get_channel(int(b["channel_id"]))
 					await chan.send(embed=self.__makeEmbed(message, type=True))
 
-	@commands.Command
+	@commands.group()
 	@checks.mod()
-	async def setupmodmail(self, ctx, type: int, anonymous: str, location: int, mention: discord.User = None):
+	async def modmail(self, ctx):
+		"""Generic container for modmail commands. run <p>help modmail for more info."""
+		return
+
+	@modmail.Command
+	@checks.mod()
+	async def setup(self, ctx, type: int, anonymous: str, location: int, mention: discord.User = None):
 		"""Initial setup for modmail"""
 		if self.s.find_one(server_id=ctx.message.guild.id) is not None:
 			return
@@ -221,9 +228,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 				return
 			await ctx.send("Succesfully setup and enabled modmail")
 
-	@commands.Command
+	@modmail.Command
 	@checks.mod()
-	async def channelmodmail(self, ctx, location: int):
+	async def location(self, ctx, location: int):
 		"""Set a modmail channel"""
 		if self.s.find_one(server_id=ctx.message.guild.id) is None:
 			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
@@ -237,9 +244,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 
 		
 
-	@commands.Command
+	@modmail.Command
 	@checks.mod()
-	async def togglemodmail(self, ctx):
+	async def toggle(self, ctx):
 		"""Toggle whether modmail is enabled"""
 		if self.s.find_one(server_id=ctx.message.guild.id) is None:
 			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
@@ -255,9 +262,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 		except:
 			await ctx.send("Failed to change value.")
 
-	@commands.Command
+	@modmail.Command
 	@checks.mod()
-	async def anonymousmodmail(self, ctx):
+	async def anonymous(self, ctx):
 		"""Toggle whether modmail should be anonymous"""
 		if self.s.find_one(server_id=ctx.message.guild.id) is None:
 			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
@@ -273,9 +280,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 		except:
 			await ctx.send("Failed to change value.")
 	
-	@commands.Command
+	@modmail.Command
 	@checks.mod()
-	async def mentionmodmail(self, ctx, mention = None):
+	async def mention(self, ctx, mention = None):
 		"""Set which role/user to mention with the first modmail."""
 		role = False
 		if self.s.find_one(server_id=ctx.message.guild.id) is None:
@@ -283,8 +290,6 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			return
 		if mention != None:
 			mention = int("".join(re.findall(r'\d+', mention)))
-		print(ctx.message.guild.get_role(mention))
-		print(ctx.message.guild.get_member(mention))
 		if not (ctx.message.guild.get_role(mention) == None or ctx.message.guild.get_member(mention) == None) or mention == '':
 			await ctx.send("Invalid argument")
 			return
@@ -296,9 +301,7 @@ class Mail(commands.Cog, name="ModMail Commands"):
 				mention2 = ctx.message.guild.get_role(mention).mention
 			if role == False and ctx.message.guild.get_member(mention) != None:
 				mention2 = ctx.message.guild.get_member(mention).mention
-		
-
-		
+	
 		try:
 			self.s.update(dict(server_id=ctx.message.guild.id, ping=mention2), ["server_id"])
 			if mention == None:
@@ -307,9 +310,9 @@ class Mail(commands.Cog, name="ModMail Commands"):
 		except:
 			await ctx.send("Failed to change value.")
 
-	@commands.Command
+	@modmail.Command
 	@checks.mod()
-	async def typemodmail(self, ctx, type: int):
+	async def type(self, ctx, type: int):
 		"""Sets which type of modmail to use on this guild."""
 		if self.s.find_one(server_id=ctx.message.guild.id) is None:
 			await ctx.send("Use {}setupmodmail to setup modmail first!".format(ctx.prefix))
