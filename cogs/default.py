@@ -15,7 +15,7 @@ class Default(commands.Cog, name="General Commands"):
 	async def say(self, ctx, *, repl: str):
 		"""Repeats what you said, stripping out mentions."""
 		length = len(ctx.command.qualified_name) + len(self.bot.command_prefix)
-		message = ctx.message.clean_content[length:]
+		message = ctx.message.clean_content[length:] # For some odd reason clean_content contains the command invocation too.
 		try:
 			await ctx.message.delete()
 		except:
@@ -50,7 +50,8 @@ class Default(commands.Cog, name="General Commands"):
 	async def neofetch(self, ctx):
 		"""Prints the specs of the machine we\'re running on. Linux/macOS hosts only."""
 		if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
-			if os.path.isfile("nf/neofetch"):
+			dire = os.listdir("nf") 
+			if len(dire) != 0: # Check if NF is installed.
 				e = os.popen('nf/neofetch --stdout').read().split("\n",2)[2]
 				embed = discord.Embed()
 				embed.add_field(name="Neofetch", value=e)
@@ -79,14 +80,6 @@ class Default(commands.Cog, name="General Commands"):
 			except:
 				await ctx.send("Failed to reset modrole")
 			await ctx.send("Successfully reste modrole")
-
-	#@commands.command()
-	#@commands.is_owner()
-	#async def twitter(self, ctx, bearer_ket: str):
-	#	"""Sets Twitter bearer key for embedding Tweets."""
-	#	dbc.save('bot', 'twitter', bearer)
-	#	await ctx.send("Succesfully updated bearer key.")
-	#	b = 0
 
 def setup(bot):
 	bot.add_cog(Default(bot))
