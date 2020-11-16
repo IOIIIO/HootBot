@@ -12,8 +12,12 @@ async def post(source, image):
   			},
   			"url": image
 		}
-		r = requests.post("{}/api/v1/json/images?key={}".format(dbc.ret("bot", "archiveLink"), dbc.ret("bot", "archiveKey")), json=j)
-		return r.json()
+		try: 
+			r = requests.post(dbc.ret("bot", "archiveLink") + "/api/v1/json/images?key=" + dbc.ret("bot", "archiveKey"), json=j)
+			b = r.json()
+		except: 
+			b = None
+		return b
 
 
 class Derpi(commands.Cog, name="Derpi Commands"):
@@ -49,6 +53,21 @@ class Derpi(commands.Cog, name="Derpi Commands"):
 		dbc.save("bot", 'archiveLink', b)
 		await ctx.send("Succesfully updated key.")
 		b = 0
+
+	@archive.command()
+	@commands.is_owner()	
+	async def setup(self, ctx, archive_channel: discord.TextChannel, archive_emote: discord.Emoji, archive_emote_amount: int):
+		"""Sets up the starboard channel, emote and amount."""
+		if self.s.find_one(server_id=ctx.message.guild.id) is not None:
+			return
+
+		try:
+			self.s.insert(dict(archive_channel=archive_channel.id, archive_emote=archive_emote.id, archive_emote_amount=archive_emote_amount, server_id=ctx.message.guild.id))
+		except Exception as E:
+			await ctx.send("Failed to setup starboard.")
+			print(E)
+			return
+		await ctx.send("Succesfully setup starboard")
 
 def setup(bot):
 	bot.add_cog(Derpi(bot))

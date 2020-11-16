@@ -63,6 +63,7 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			return
 		matchedGuilds = {}
 		response = ""
+		self.rec = 0; self.rec2 = 0
 
 		def check(m):
 			return m.author == ctx.message.author
@@ -71,6 +72,13 @@ class Mail(commands.Cog, name="ModMail Commands"):
 			return m.author == ctx.message.author and (m.content == "y" or m.content == "n")
 
 		async def interact1(self, ctx):
+			try:
+				self.rec = self.rec + 1
+				if self.rec == 5:
+					await ctx.send('Sorry, you took too long to answer.')
+					return
+			except NameError:
+				self.rec = 0
 			await ctx.send(response + "Which server would you like to contact?")
 			try:
 				answer = await self.bot.wait_for('message', check=check, timeout=15)
@@ -87,6 +95,13 @@ class Mail(commands.Cog, name="ModMail Commands"):
 				return
 
 		async def interact2(self, ctx, electedGuild):
+			try:
+				self.rec = self.rec + 1
+				if self.rec == 5:
+					await ctx.send('Sorry, you took too long to answer.')
+					return
+			except NameError:
+				self.rec = 0
 			await ctx.send("You chose server {} with ID {} \n Is this correct? (y/n)".format(matchedGuilds[electedGuild], electedGuild))
 			try:
 				answer = await self.bot.wait_for('message', check=checkBool, timeout=15)
@@ -104,6 +119,12 @@ class Mail(commands.Cog, name="ModMail Commands"):
 				return
 
 		async def interact3(self, ctx):
+			nonlocal rec2
+			print(rec2)
+			self.rec2 = self.rec2 + 1
+			if self.rec2 == 5:
+				await ctx.send('Sorry, you took too long to answer.')
+				return
 			await ctx.send("What is your message? \n (You have 10 minutes till timeout and maximum 2000 characters.)")
 			try:
 				answer = await self.bot.wait_for('message', check=check, timeout=600)
@@ -114,6 +135,14 @@ class Mail(commands.Cog, name="ModMail Commands"):
 				return
 
 		async def interact4(self, ctx, content):
+			nonlocal rec2
+			if rec2 == 0:
+				rec2 = 0
+			print(rec2)
+			self.rec2 = self.rec2 + 1
+			if self.rec2 == 5:
+				await ctx.send('Sorry, you took too long to answer.')
+				return
 			await ctx.send("Is this message correct? (y/n)")
 			try:
 				answer = await self.bot.wait_for('message', check=checkBool, timeout=30)

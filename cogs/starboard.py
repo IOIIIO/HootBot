@@ -54,6 +54,8 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 					if any(ext in url for ext in ['.gif', ".jpg", ".webm", ".jpeg", ".png", ".svg"]):
 						b = await derpi.post(str(link), str(url))
 						url = dbc.ret("bot", "archiveLink") + b["image"]["representations"]["full"]
+						if url == None:
+							url = url2
 					else:
 						url = url2 # Fallback to backup, just in case
 						pass

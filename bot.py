@@ -20,7 +20,7 @@ except Exception as e:
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix=dbc.ret('bot', 'prefix'), description="HootBot, hooting your images to safety!", intents=intents)
-extensions = ['cogs.default', 'cogs.modmail', 'cogs.JazUtils', 'cogs.derpi', 'cogs.starboard']
+extensions = ['cogs.default']
 
 if __name__ == '__main__':
     for extension in extensions:
