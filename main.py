@@ -252,14 +252,16 @@ async def insta(message):
 
 @bot.event
 async def on_message(message):
-	if not isinstance(message.channel, discord.channel.DMChannel):
-		if 'insta' in cfg[str(message.guild.id)]:
-			await insta(message)
+	try:
+		if not isinstance(message.channel, discord.channel.DMChannel):
+			if 'insta' in cfg[str(message.guild.id)]:
+				await insta(message)
 
-		if 'reddit' in cfg[str(message.guild.id)]:
-			await redembed(message)
-
-	await bot.process_commands(message)
+			if 'reddit' in cfg[str(message.guild.id)]:
+				await redembed(message)
+		await bot.process_commands(message)
+	except:
+		await bot.process_commands(message)
 
 def is_owner(ctx):
 	if str(ctx.message.author.id) == cfg["owner"]:
