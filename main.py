@@ -460,7 +460,7 @@ async def pip(ctx):
 			c = 0xff0000
 			p = ""
 		else:
-			log = json.loads(os.popen('curl --data "text=$(pip3 install -r requirements.txt)" https://file.io').read())["link"]
+			log = json.loads(os.popen('curl --data "text=$(pip3 install --upgrade -r requirements.txt)" https://file.io').read())["link"]
 			r = "Restarting!"
 			c = 0x00ff00
 			p = "[Click here for log!]({})".format(log)
