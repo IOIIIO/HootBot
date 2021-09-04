@@ -7,3 +7,5 @@ nf/*
 *.db
 .DS_Store
 bot.old.json
+*.db-shm
+*.db-wal

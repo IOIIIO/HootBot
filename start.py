@@ -1,5 +1,8 @@
 import os, sys, subprocess
-import cogs.support.db as dbc
+try:
+    import cogs.support.db as dbc
+except:
+    pass
 
 class Launch:
     def __init__(self):

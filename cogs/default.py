@@ -63,23 +63,5 @@ class Default(commands.Cog, name="General Commands"):
 		else:
 			await ctx.send("Command not supported on this platform.")
 
-	@commands.command()
-	@commands.cooldown(1, 60, BucketType.guild)
-	@commands.guild_only()
-	async def modrole(self, ctx, role: discord.Role = None):
-		"""Adds a guild-specific role that overrides moderator permissions check."""
-		if role != None:
-			try:
-				dbc.save(str(ctx.message.guild.id), 'mod_role', role.id)
-			except:
-				await ctx.send("Failed to change modrole.")
-			await ctx.send("Successfully changed modrole to {}".format(role.name))
-		else:
-			try:
-				dbc.save(str(ctx.message.guild.id), 'mod_role', None)
-			except:
-				await ctx.send("Failed to reset modrole")
-			await ctx.send("Successfully reste modrole")
-
 def setup(bot):
 	bot.add_cog(Default(bot))
