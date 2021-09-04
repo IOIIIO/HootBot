@@ -27,8 +27,8 @@ class Launch:
             
         self.settings = dbc.db['bot']
         dbc.db.create_table('starboardServer')
-	    dbc.db.create_table('starboardIgnore')
-	    dbc.db.create_table('starboardCustom')
+        dbc.db.create_table('starboardIgnore')
+        dbc.db.create_table('starboardCustom')
         #print(self.settings.find_one(name="token"))
         #exit()
         #print(testa := self.settings.find_one(name="token"))
