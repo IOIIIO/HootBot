@@ -1,3 +1,6 @@
 [submodule "rogue"]
 	path = rogue
 	url = https://github.com/IOIIIO/starboard.git
+[submodule "nf"]
+	path = nf
+	url = https://github.com/dylanaraps/neofetch.git
