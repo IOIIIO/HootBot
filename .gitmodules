@@ -1,0 +1,3 @@
+[submodule "rogue"]
+	path = rogue
+	url = https://github.com/IOIIIO/starboard.git
