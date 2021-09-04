@@ -1,7 +1,16 @@
 from discord.ext import commands
 
 def mod():
-    if not commands.is_owner():
-        return commands.has_guild_permissions(manage_messages=True)
-    else:
-        return commands.is_owner()
+    async def predicate(ctx):
+        if not ctx.guild:
+            raise commands.errors.NoPrivateMessage
+
+        ch = ctx.channel
+        permissions = ch.permissions_for(ctx.author)
+
+        return (await ctx.bot.is_owner(ctx.author)) or getattr(permissions, "manage_messages")
+    
+    return commands.check(predicate)
+
+def owner():
+    return commands.is_owner()

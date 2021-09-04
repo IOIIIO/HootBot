@@ -47,21 +47,21 @@ class Starboard(commands.Cog, name="Starboard Commands"):
 		# tweet = string to be posted in Content field of embed
 		# author = pre-set author of original message. Overrides author of msg
 		# link = link to the source post of the archived image
-		if url != "":
-			if int(dbc.ret("bot", "archive")) == 1: # Check if archive is globally enabled
-				try:
-					url2 = url # Set a backup, in case the next function screws up the link
-					if any(ext in url for ext in ['.gif', ".jpg", ".webm", ".jpeg", ".png", ".svg"]):
-						b = await derpi.post(str(link), str(url))
-						url = dbc.ret("bot", "archiveLink") + b["image"]["representations"]["full"]
-						if url == None:
-							url = url2
-					else:
-						url = url2 # Fallback to backup, just in case
-						pass
-				except:
-					url = url2
-					pass
+		#if url != "":
+		#	if int(dbc.ret("bot", "archive")) == 1: # Check if archive is globally enabled
+		#		try:
+		#			url2 = url # Set a backup, in case the next function screws up the link
+		#			if any(ext in url for ext in ['.gif', ".jpg", ".webm", ".jpeg", ".png", ".svg"]):
+		#				b = await derpi.post(str(link), str(url))
+		#				url = dbc.ret("bot", "archiveLink") + b["image"]["representations"]["full"]
+		#				if url == None:
+		#					url = url2
+		#			else:
+		#				url = url2 # Fallback to backup, just in case
+		#				pass
+		#		except:
+		#			url = url2
+		#			pass
 		embed = discord.Embed()
 		if len(tweet):
 			embed.add_field(name='Tweet/Embed Content', value=tweet, inline=False)

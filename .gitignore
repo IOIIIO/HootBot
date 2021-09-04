@@ -6,3 +6,4 @@ settings.db
 nf/*
 *.db
 .DS_Store
+bot.old.json
