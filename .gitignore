@@ -9,3 +9,6 @@ nf/*
 bot.old.json
 *.db-shm
 *.db-wal
+
+hootbot
+get-pip.py
