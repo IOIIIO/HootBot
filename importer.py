@@ -18,7 +18,7 @@ for server in cfg:
 			print("Found: Server: {} - Channel: {} - Message: {}".format(server, channel, message))
 			rows.append(dict(server_id=server, channel_id=channel, message_id=message))
 
-db = dataset.connect('sqlite:///settingstest.db')
+db = dataset.connect('sqlite:///settings.db')
 db.begin()
 try:
     db["starboardIgnore"].upsert_many(rows, ['message_id'])
