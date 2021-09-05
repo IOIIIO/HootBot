@@ -77,5 +77,23 @@ class Updater(commands.Cog, name="Updater Commands"):
 			await self.bot.logout()
 			os.execl(sys.executable, sys.executable, * sys.argv)
 
+	@update.group()
+	@commands.is_owner()
+	async def submodules(self, ctx):
+		"""Updates the bot submodules to the latest commit, and restarts if necessary."""
+		e = os.popen('git submodule update --remote --merge').read()
+		if "Already up to date." in e:
+			r = "Not restarting."
+			c = 0xff0000
+		else:
+			r = "Restarting!"
+			c = 0x00ff00
+		embed=discord.Embed(title="HootBot Updater", color=c)
+		embed.add_field(name=r, value="```e\n{}```".format(e), inline=False)
+		await ctx.send(embed=embed)
+		if c == 0x00ff00:
+			await self.bot.logout()
+			os.execl(sys.executable, sys.executable, * sys.argv)
+
 def setup(bot):
 	bot.add_cog(Updater(bot))
