@@ -2,6 +2,7 @@ try:
 	import discord
 	import traceback
 	from discord.ext import commands
+	from dislash import InteractionClient
 except:
 	print("Failed to load a module. Make sure to start the bot using start.py")
 	exit()
@@ -20,6 +21,7 @@ except Exception as e:
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix=dbc.ret('bot', 'prefix'), description="HootBot, hooting your images to safety!", intents=intents)
+inter_client = InteractionClient(bot)
 extensions = ['cogs.default', 'cogs.updater', 'cogs.schedule', 'cogs.JazUtils', 'cogs.errors', 'cogs.embed',
 			'rogue.main', 'rogue.instagram', 'rogue.reddit', 'cogs.rules']
 
