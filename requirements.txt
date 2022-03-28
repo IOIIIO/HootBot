@@ -4,4 +4,4 @@ requests
 git+https://github.com/BryanH/imgurpython
 dataset
 requests_oauthlib
-discord-py-interactions
+dislash.py
